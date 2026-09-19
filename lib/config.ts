@@ -76,7 +76,7 @@ export const SORTEIOS = {
     {
       id: "airfryer",
       nome: "Air Fryer",
-      detalhe: "Multi MF1300 · 3 litros",
+      detalhe: "Multi MF1300 · 4,4 litros",
       imagem: "/premios/air-fryer.png",
       regra: "Qualquer doação concorre",
       todos: true,
