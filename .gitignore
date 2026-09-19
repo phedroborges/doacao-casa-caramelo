@@ -4,6 +4,8 @@ out/
 *.tsbuildinfo
 data/doacoes.json
 data/*.tmp
+data/*.sqlite*
+data/uploads/
 *.csv
 .env*
 !.env.example

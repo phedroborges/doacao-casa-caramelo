@@ -7,7 +7,22 @@
  * A estrutura gerada é idêntica à do código original, mais o campo 54 (valor).
  */
 
-import { PIX } from "./config";
+export const PIX_PADRAO = {
+  valorEmbutidoNoQr: true,
+  codigoEstatico:
+    "00020126580014br.gov.bcb.pix0136ea6bb940-294b-4730-9d90-0aa5eb08e0fc5204000053039865802BR5917F C LUCIANO  LTDA6014RIO DE JANEIRO62070503***63044A75",
+  chave: "ea6bb940-294b-4730-9d90-0aa5eb08e0fc",
+  nome: "F C LUCIANO  LTDA",
+  cidade: "RIO DE JANEIRO",
+};
+
+export type ConfiguracaoPix = {
+  pixValorEmbutido: boolean;
+  pixCodigoEstatico: string;
+  pixChave: string;
+  pixNome: string;
+  pixCidade: string;
+};
 
 /** Um campo EMV: id + tamanho em 2 dígitos + valor. */
 function campo(id: string, valor: string): string {
@@ -37,11 +52,20 @@ function sanitiza(texto: string, limite: number): string {
     .trim();
 }
 
-export function gerarBrCode(valorEmReais: number): string {
-  if (!PIX.valorEmbutidoNoQr) return PIX.codigoEstatico;
+export function gerarBrCode(valorEmReais: number, evento?: ConfiguracaoPix): string {
+  const config = evento
+    ? {
+        valorEmbutidoNoQr: evento.pixValorEmbutido,
+        codigoEstatico: evento.pixCodigoEstatico,
+        chave: evento.pixChave,
+        nome: evento.pixNome,
+        cidade: evento.pixCidade,
+      }
+    : PIX_PADRAO;
+  if (!config.valorEmbutidoNoQr) return config.codigoEstatico;
 
   const merchantAccountInfo =
-    campo("00", "br.gov.bcb.pix") + campo("01", PIX.chave);
+    campo("00", "br.gov.bcb.pix") + campo("01", config.chave);
 
   const payloadSemCrc =
     campo("00", "01") + // payload format indicator
@@ -50,8 +74,8 @@ export function gerarBrCode(valorEmReais: number): string {
     campo("53", "986") + // moeda: BRL
     campo("54", valorEmReais.toFixed(2)) +
     campo("58", "BR") +
-    campo("59", sanitiza(PIX.nome, 25)) +
-    campo("60", sanitiza(PIX.cidade, 15)) +
+    campo("59", sanitiza(config.nome, 25)) +
+    campo("60", sanitiza(config.cidade, 15)) +
     campo("62", campo("05", "***")) + // txid livre, como no código original
     "6304"; // o CRC entra logo depois, mas o id+tamanho já contam no cálculo
 

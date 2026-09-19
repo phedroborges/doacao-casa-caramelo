@@ -6,5 +6,7 @@ npm-debug.log*
 *.tsbuildinfo
 data/doacoes.json
 data/*.tmp
+data/*.sqlite*
+data/uploads/
 .env*
 .DS_Store

@@ -8,13 +8,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const tmp = await mkdtemp(join(tmpdir(), "pix-"));
-for (const arquivo of ["config.ts", "pix.ts"]) {
+for (const arquivo of ["pix.ts"]) {
   const fonte = await readFile(join(process.cwd(), "lib", arquivo), "utf8");
   await writeFile(join(tmp, arquivo), fonte.replace(/from "\.\/(\w+)"/g, 'from "./$1.ts"'));
 }
 
-const { gerarBrCode, brCodeValido, crc16 } = await import(join(tmp, "pix.ts"));
-const { PIX } = await import(join(tmp, "config.ts"));
+const { gerarBrCode, brCodeValido, crc16, PIX_PADRAO: PIX } = await import(join(tmp, "pix.ts"));
 
 let falhas = 0;
 const checa = (nome, condicao) => {

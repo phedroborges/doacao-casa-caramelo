@@ -5,6 +5,11 @@ const nextConfig = {
   poweredByHeader: false,
   // Os arquivos de imagem são locais; nada depende de um otimizador remoto.
   images: { unoptimized: true },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
+  },
   async headers() {
     return [
       {

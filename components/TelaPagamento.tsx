@@ -2,27 +2,28 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { DESAFIO, VALOR_PARA_CAIXA, reaisParaKg, type Atletica } from "@/lib/config";
 import { gerarBrCode } from "@/lib/pix";
+import type { EventoPublico, Participante } from "@/lib/modelos";
 import { formatarReais } from "@/lib/cardImagem";
 import { Premios } from "@/components/Premios";
 
 type LinhaMeta = {
-  atleticaId: string;
+  participanteId: string;
   pesoKg: number;
   percentual: number;
   bateuMeta: boolean;
+  metaKg: number;
 };
 
 type Props = {
   nome: string;
-  atletica: Atletica;
+  evento: EventoPublico;
+  participante: Participante | null;
   aoVoltar: () => void;
-  /** Copiar o código já leva para a espera — o pagamento começou ali. */
   aoIrParaEspera: (valor: number) => void;
 };
 
-export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Props) {
+export function TelaPagamento({ nome, evento, participante, aoVoltar, aoIrParaEspera }: Props) {
   const [valorTexto, setValorTexto] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -31,24 +32,20 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
 
   const valor = useMemo(() => {
     const limpo = valorTexto.replace(/\./g, "").replace(",", ".");
-    const numero = Number(limpo);
-    return Number.isFinite(numero) ? numero : 0;
+    const convertido = Number(limpo);
+    return Number.isFinite(convertido) ? convertido : 0;
   }, [valorTexto]);
 
-  const valorValido = valor >= DESAFIO.valorMinimo;
-  const pesoEquivalente = reaisParaKg(valor);
-  const faltaParaMetaKg = linhaMeta
-    ? Math.max(0, DESAFIO.metaKg - linhaMeta.pesoKg)
-    : null;
-  const faltaParaMetaReais = faltaParaMetaKg === null
-    ? null
-    : faltaParaMetaKg * DESAFIO.reaisPorKg;
+  const valorValido = valor >= evento.valorMinimo;
+  const pesoEquivalente = Math.round((valor / evento.reaisPorKg) * 100) / 100;
+  const metaParticipante = participante?.metaKg ?? evento.metaKg;
+  const faltaParaMetaKg = linhaMeta ? Math.max(0, linhaMeta.metaKg - linhaMeta.pesoKg) : null;
+  const faltaParaMetaReais = faltaParaMetaKg === null ? null : faltaParaMetaKg * evento.reaisPorKg;
   const pesoComDoacao = linhaMeta ? linhaMeta.pesoKg + pesoEquivalente : null;
 
-  // O BR Code é montado aqui mesmo: o QR acompanha o valor enquanto se digita.
   const brCode = useMemo(
-    () => (valorValido ? gerarBrCode(Math.round(valor * 100) / 100) : null),
-    [valor, valorValido],
+    () => (valorValido ? gerarBrCode(Math.round(valor * 100) / 100, evento) : null),
+    [evento, valor, valorValido],
   );
 
   useEffect(() => {
@@ -75,8 +72,9 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
   }, [brCode]);
 
   useEffect(() => {
+    if (!participante) return;
     let cancelado = false;
-    fetch("/api/ranking", { cache: "no-store" })
+    fetch(`/api/ranking?evento=${encodeURIComponent(evento.id)}`, { cache: "no-store" })
       .then((resposta) => {
         if (!resposta.ok) throw new Error("Não consegui carregar a meta.");
         return resposta.json() as Promise<{ linhas: LinhaMeta[] }>;
@@ -84,7 +82,7 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
       .then((ranking) => {
         if (!cancelado) {
           setLinhaMeta(
-            ranking.linhas.find((linha) => linha.atleticaId === atletica.id) ?? null,
+            ranking.linhas.find((linha) => linha.participanteId === participante.id) ?? null,
           );
         }
       })
@@ -94,14 +92,13 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
     return () => {
       cancelado = true;
     };
-  }, [atletica.id]);
+  }, [evento.id, participante?.id]);
 
   async function copiarEAvancar() {
     if (!brCode || !valorValido) return;
     try {
       await navigator.clipboard.writeText(brCode);
     } catch {
-      // Safari sem permissão de área de transferência: seleciona para copiar na mão.
       const area = document.createElement("textarea");
       area.value = brCode;
       area.style.position = "fixed";
@@ -117,58 +114,63 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
   return (
     <main className="tela tela-pagamento">
       <button type="button" className="voltar" onClick={aoVoltar}>
-        <span aria-hidden="true">←</span> {nome.split(" ")[0]} · {atletica.nome}
+        <span aria-hidden="true">←</span> {nome.split(" ")[0]}
+        {participante ? ` · ${participante.nome}` : ""}
       </button>
 
-      {/* Os prêmios ficam no topo: é o motivo de a pessoa estar aqui. */}
       <Premios
+        premios={evento.premios}
         compacta
-        pesoKg={valorValido ? pesoEquivalente : undefined}
-        aoSubirParaCaixa={() => setValorTexto(String(VALOR_PARA_CAIXA))}
+        valor={valorValido ? valor : undefined}
+        aoEscolherValor={(novoValor) => setValorTexto(String(novoValor))}
       />
 
-      <section className="meta-doacao" aria-label={`Meta da ${atletica.nome}`}>
-        <div className="meta-doacao-cabeca">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={atletica.logo} alt="" />
-          <div>
-            <span>Meta da {atletica.nome}</span>
-            {linhaMeta ? (
-              <strong>
-                {linhaMeta.pesoKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg de{" "}
-                {DESAFIO.metaKg} kg
-              </strong>
-            ) : (
-              <strong>Carregando o placar...</strong>
+      {participante && (
+        <section className="meta-doacao" aria-label={`Meta de ${participante.nome}`}>
+          <div className="meta-doacao-cabeca">
+            {participante.imagem && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={participante.imagem} alt="" />
             )}
+            <div>
+              <span>Meta de {participante.nome}</span>
+              {linhaMeta ? (
+                <strong>
+                  {linhaMeta.pesoKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg de{" "}
+                  {linhaMeta.metaKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg
+                </strong>
+              ) : (
+                <strong>Carregando o placar...</strong>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="meta-doacao-trilho" aria-hidden="true">
-          <span style={{ width: `${Math.min(100, linhaMeta?.percentual ?? 0)}%` }} />
-        </div>
+          <div className="meta-doacao-trilho" aria-hidden="true">
+            <span style={{ width: `${Math.min(100, linhaMeta?.percentual ?? 0)}%` }} />
+          </div>
 
-        {linhaMeta && faltaParaMetaKg !== null && faltaParaMetaReais !== null && (
-          <p>
-            {linhaMeta.bateuMeta ? (
-              <>Meta batida! Sua doação aumenta ainda mais o impacto.</>
-            ) : (
-              <>
-                Faltam <strong>{faltaParaMetaKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg</strong>
-                {" "}(R$ {faltaParaMetaReais.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}) para bater a meta.
-              </>
-            )}
-          </p>
-        )}
+          {linhaMeta && faltaParaMetaKg !== null && faltaParaMetaReais !== null && (
+            <p>
+              {linhaMeta.bateuMeta ? (
+                <>Meta batida! Sua doação aumenta ainda mais o impacto.</>
+              ) : (
+                <>
+                  Faltam <strong>{faltaParaMetaKg.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg</strong>{" "}
+                  ({formatarReais(faltaParaMetaReais)}) para bater a meta.
+                </>
+              )}
+            </p>
+          )}
 
-        {valorValido && pesoComDoacao !== null && !linhaMeta?.bateuMeta && (
-          <small>
-            {pesoComDoacao >= DESAFIO.metaKg
-              ? "Com a sua doação, a atlética bate a meta! 🎉"
-              : `Com a sua doação, ela chega a ${pesoComDoacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg.`}
-          </small>
-        )}
-      </section>
+          {valorValido && pesoComDoacao !== null && !linhaMeta?.bateuMeta && (
+            <small>
+              {pesoComDoacao >= metaParticipante
+                ? `Com a sua doação, ${participante.nome} bate a meta! 🎉`
+                : `Com a sua doação, chega a ${pesoComDoacao.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg.`}
+            </small>
+          )}
+        </section>
+      )}
 
       <div className="cartao cartao-valor">
         <div className="campo">
@@ -179,31 +181,31 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
             type="text"
             inputMode="decimal"
             autoComplete="off"
-            placeholder={`Mínimo R$ ${DESAFIO.valorMinimo},00`}
+            placeholder={`Mínimo ${formatarReais(evento.valorMinimo)}`}
             value={valorTexto}
-            onChange={(evento) => setValorTexto(evento.target.value.replace(/[^\d.,]/g, ""))}
+            onChange={(mudanca) => setValorTexto(mudanca.target.value.replace(/[^\d.,]/g, ""))}
           />
         </div>
 
         <div className="valores valores-doacao">
-          {DESAFIO.valoresSugeridos.map((sugestao) => (
+          {evento.valoresSugeridos.map((sugestao) => (
             <button
               key={sugestao}
               type="button"
-              data-destaque={sugestao === DESAFIO.valorSacoRacao}
+              data-destaque={sugestao === evento.valorSaco && evento.pesoSacoKg > 0}
               aria-pressed={valor === sugestao}
               onClick={() => setValorTexto(String(sugestao))}
             >
-              <span>R$ {sugestao}</span>
-              {sugestao === DESAFIO.valorSacoRacao && (
-                <small>1 saco · {DESAFIO.pesoSacoRacaoKg} kg</small>
+              <span>{formatarReais(sugestao)}</span>
+              {sugestao === evento.valorSaco && evento.pesoSacoKg > 0 && (
+                <small>1 saco · {evento.pesoSacoKg.toLocaleString("pt-BR")} kg</small>
               )}
             </button>
           ))}
         </div>
 
         {valorTexto !== "" && !valorValido && (
-          <span className="erro">O valor mínimo é R$ {DESAFIO.valorMinimo},00.</span>
+          <span className="erro">O valor mínimo é {formatarReais(evento.valorMinimo)}.</span>
         )}
       </div>
 
@@ -211,7 +213,6 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
         <div className="pagar">
           <div className="pagar-qr">
             {qrDataUrl ? (
-              // A imagem vem de um data URL gerado aqui; next/image não agrega nada.
               // eslint-disable-next-line @next/next/no-img-element
               <img src={qrDataUrl} alt={`QR Code PIX de ${formatarReais(valor)}`} />
             ) : (
@@ -219,34 +220,19 @@ export function TelaPagamento({ nome, atletica, aoVoltar, aoIrParaEspera }: Prop
             )}
             <div className="pagar-resumo">
               <strong>{formatarReais(valor)}</strong>
-              <span>
-                = {pesoEquivalente.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg de
-                ração
-              </span>
-              <small>O valor já vem preenchido no seu banco.</small>
+              <span>= {pesoEquivalente.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg de ração</span>
+              <small>{evento.pixValorEmbutido ? "O valor já vem preenchido no seu banco." : "Digite o valor no seu banco."}</small>
             </div>
           </div>
 
-          <button type="button" className="botao" onClick={copiarEAvancar}>
-            Copiar código PIX
-          </button>
-          <button type="button" className="botao-texto" onClick={() => aoIrParaEspera(Math.round(valor * 100) / 100)}>
-            Já paguei escaneando o QR Code
-          </button>
+          <button type="button" className="botao" onClick={copiarEAvancar}>Copiar código PIX</button>
+          <button type="button" className="botao-texto" onClick={() => aoIrParaEspera(Math.round(valor * 100) / 100)}>Já paguei escaneando o QR Code</button>
         </div>
       ) : (
-        <div className="cartao centro">
-          <p className="subtitulo" style={{ margin: 0 }}>
-            Escolha um valor e o PIX aparece aqui. 🐶
-          </p>
-        </div>
+        <div className="cartao centro"><p className="subtitulo" style={{ margin: 0 }}>Escolha um valor e o PIX aparece aqui. 🐶</p></div>
       )}
 
-      {erro && (
-        <p className="centro" style={{ color: "var(--ameixa)", fontWeight: 800 }}>
-          {erro}
-        </p>
-      )}
+      {erro && <p className="centro" style={{ color: "var(--ameixa)", fontWeight: 800 }}>{erro}</p>}
     </main>
   );
 }

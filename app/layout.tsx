@@ -1,10 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { EVENTO } from "@/lib/config";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: `${EVENTO.nome} — ${EVENTO.subtitulo}`,
-  description: EVENTO.chamada,
+  title: "Doações Casa Caramelo",
+  description: "Eventos e campanhas de doação da Casa Caramelo.",
   icons: { icon: "/marca/logo/casa-caramelo-roxo.png" },
 };
 

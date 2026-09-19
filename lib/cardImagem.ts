@@ -1,24 +1,13 @@
-/**
- * Gera o card vertical de compartilhamento da Casa Caramelo.
- *
- * O canvas roda no navegador. A imagem não é enviada ao servidor e fica
- * pronta para ser entregue à bandeja de compartilhamento do celular.
- */
+/** Geração do card vertical de compartilhamento no próprio navegador. */
 
-import { DESAFIO, EVENTO } from "./config";
-
-export const CORES = {
-  rosa: "#FF0197",
-  fundo: "#2C0020",
-  amarelo: "#FECB00",
-  branco: "#FFFDF7",
-};
+import type { EventoPublico, Participante } from "./modelos";
 
 export const FORMATO_STORY = { largura: 1080, altura: 1920 } as const;
 
 export type DadosCard = {
   pesoKg: number;
-  logoAtletica: string;
+  evento: EventoPublico;
+  participante: Participante | null;
 };
 
 export async function carregarFontes(): Promise<void> {
@@ -99,6 +88,26 @@ function textoQueCabe(
   return tamanho;
 }
 
+function quebrarLinhas(
+  ctx: CanvasRenderingContext2D,
+  texto: string,
+  larguraMaxima: number,
+): string[] {
+  const palavras = texto.split(/\s+/).filter(Boolean);
+  const linhas: string[] = [];
+  let atual = "";
+  for (const palavra of palavras) {
+    const candidata = atual ? `${atual} ${palavra}` : palavra;
+    if (ctx.measureText(candidata).width <= larguraMaxima) atual = candidata;
+    else {
+      if (atual) linhas.push(atual);
+      atual = palavra;
+    }
+  }
+  if (atual) linhas.push(atual);
+  return linhas;
+}
+
 export function formatarReais(valor: number): string {
   return valor.toLocaleString("pt-BR", {
     style: "currency",
@@ -111,56 +120,65 @@ export function formatarKg(valor: number): string {
   return `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} KG`;
 }
 
-export async function desenharCard(
-  canvas: HTMLCanvasElement,
-  dados: DadosCard,
-): Promise<void> {
+export function preencherTextoCompartilhamento(evento: EventoPublico, pesoKg: number): string {
+  return evento.textoCompartilhamento
+    .replaceAll("{kg}", formatarKg(pesoKg))
+    .replaceAll("{beneficiario}", evento.beneficiario)
+    .replaceAll("{evento}", evento.nome)
+    .trim();
+}
+
+export async function desenharCard(canvas: HTMLCanvasElement, dados: DadosCard): Promise<void> {
   const { largura, altura } = FORMATO_STORY;
   canvas.width = largura;
   canvas.height = altura;
-
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D indisponível neste navegador.");
 
   const centroX = largura / 2;
   const larguraUtil = largura - 160;
+  const corFundo = dados.evento.corPrimaria;
+  const corDestaque = dados.evento.corDestaque;
+  const corEscura = "#2C0020";
+  const corClara = "#FFFDF7";
 
-  ctx.fillStyle = CORES.rosa;
+  ctx.fillStyle = corFundo;
   ctx.fillRect(0, 0, largura, altura);
-
   ctx.fillStyle = "rgba(44,0,32,0.12)";
   mancha(ctx, 80, 80, 470, 175, -0.28);
   mancha(ctx, 1040, 1110, 340, 135, 0.5);
   mancha(ctx, 70, 1830, 420, 120, 0.18);
 
-  // As três marcas aparecem juntas, sem competir com a mensagem da doação.
-  const [laf, casa, atletica] = await Promise.allSettled([
-    carregarImagem("/marca/laf-branco.png"),
-    carregarImagem("/marca/logo/casa-caramelo-amarelo.png"),
-    carregarImagem(dados.logoAtletica),
-  ]);
-
-  if (laf.status === "fulfilled") {
-    desenharContida(ctx, laf.value, 90, 286, 300, 130);
-  }
-  if (casa.status === "fulfilled") {
-    desenharContida(ctx, casa.value, 455, 276, 170, 150);
-  }
-  if (atletica.status === "fulfilled") {
-    ctx.fillStyle = CORES.branco;
+  const imagens = await Promise.allSettled(
+    [dados.evento.logoEvento, dados.evento.logoMarca, dados.participante?.imagem]
+      .map((src) => (src ? carregarImagem(src) : Promise.reject(new Error("sem imagem")))),
+  );
+  if (imagens[0]?.status === "fulfilled") desenharContida(ctx, imagens[0].value, 90, 230, 300, 150);
+  if (imagens[1]?.status === "fulfilled") desenharContida(ctx, imagens[1].value, 455, 230, 170, 150);
+  if (imagens[2]?.status === "fulfilled") {
+    ctx.fillStyle = corClara;
     ctx.beginPath();
-    ctx.arc(835, 351, 82, 0, Math.PI * 2);
+    ctx.arc(835, 305, 82, 0, Math.PI * 2);
     ctx.fill();
-    desenharContida(ctx, atletica.value, 780, 296, 110, 110);
+    desenharContida(ctx, imagens[2].value, 780, 250, 110, 110);
   }
 
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
+  ctx.fillStyle = corClara;
+  const tamanhoEvento = textoQueCabe(
+    ctx,
+    dados.evento.nome,
+    larguraUtil,
+    (tamanho) => `800 ${tamanho}px "Just Sans", sans-serif`,
+    44,
+  );
+  ctx.font = `800 ${tamanhoEvento}px "Just Sans", sans-serif`;
+  ctx.fillText(dados.evento.nome.toUpperCase(), centroX, 430);
 
-  ctx.fillStyle = CORES.branco;
   ctx.font = '800 52px "Just Sans", sans-serif';
   ctx.letterSpacing = "0.15em";
-  ctx.fillText("EU ACABEI DE DOAR", centroX, 520);
+  ctx.fillText("EU ACABEI DE DOAR", centroX, 530);
   ctx.letterSpacing = "0px";
 
   const peso = formatarKg(dados.pesoKg);
@@ -169,65 +187,47 @@ export async function desenharCard(
     peso,
     larguraUtil,
     (tamanho) => `400 ${tamanho}px "Ketchup Manis", sans-serif`,
-    235,
+    225,
   );
   ctx.font = `400 ${tamanhoPeso}px "Ketchup Manis", sans-serif`;
   ctx.lineJoin = "round";
-  ctx.lineWidth = 28;
-  ctx.strokeStyle = CORES.fundo;
-  ctx.strokeText(peso, centroX, 604);
-  ctx.fillStyle = CORES.amarelo;
-  ctx.fillText(peso, centroX, 604);
+  ctx.lineWidth = 26;
+  ctx.strokeStyle = corEscura;
+  ctx.strokeText(peso, centroX, 610);
+  ctx.fillStyle = corDestaque;
+  ctx.fillText(peso, centroX, 610);
 
-  ctx.fillStyle = CORES.branco;
-  ctx.font = '700 48px "Just Sans", sans-serif';
-  ctx.fillText("DE RAÇÃO PARA OS", centroX, 858);
-
-  const tamanhoMineiros = textoQueCabe(
-    ctx,
-    "AUMIGOS DE MINEIROS",
-    larguraUtil,
-    (tamanho) => `400 ${tamanho}px "Ketchup Manis", sans-serif`,
-    98,
+  let mensagem = preencherTextoCompartilhamento(dados.evento, dados.pesoKg);
+  const prefixo = new RegExp(
+    `^Eu acabei de doar\\s+${peso.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+de ração\\s+`,
+    "i",
   );
-  ctx.font = `400 ${tamanhoMineiros}px "Ketchup Manis", sans-serif`;
-  ctx.lineWidth = 12;
-  ctx.strokeStyle = CORES.fundo;
-  ctx.strokeText("AUMIGOS DE MINEIROS", centroX, 938);
-  ctx.fillStyle = CORES.branco;
-  ctx.fillText("AUMIGOS DE MINEIROS", centroX, 938);
-
-  ctx.fillStyle = CORES.branco;
-  ctx.font = '700 48px "Just Sans", sans-serif';
-  ctx.fillText("E TE CONVIDO A", centroX, 1082);
-
-  const tamanhoConvite = textoQueCabe(
-    ctx,
-    "DOAR TAMBÉM.",
-    larguraUtil,
-    (tamanho) => `400 ${tamanho}px "Ketchup Manis", sans-serif`,
-    150,
-  );
-  ctx.font = `400 ${tamanhoConvite}px "Ketchup Manis", sans-serif`;
-  ctx.lineWidth = 18;
-  ctx.strokeStyle = CORES.fundo;
-  ctx.strokeText("DOAR TAMBÉM.", centroX, 1165);
-  ctx.fillStyle = CORES.amarelo;
-  ctx.fillText("DOAR TAMBÉM.", centroX, 1165);
+  mensagem = mensagem.replace(prefixo, "");
+  ctx.fillStyle = corClara;
+  ctx.font = '800 58px "Just Sans", sans-serif';
+  const linhas = quebrarLinhas(ctx, mensagem.toUpperCase(), larguraUtil).slice(0, 7);
+  const alturaLinha = 76;
+  const inicioTexto = 915 + Math.max(0, (6 - linhas.length) * 20);
+  linhas.forEach((linha, indice) => ctx.fillText(linha, centroX, inicioTexto + indice * alturaLinha));
 
   ctx.strokeStyle = "rgba(255,253,247,0.52)";
   ctx.lineWidth = 4;
   ctx.beginPath();
-  ctx.moveTo(centroX - 150, 1460);
-  ctx.lineTo(centroX + 150, 1460);
+  ctx.moveTo(centroX - 150, 1510);
+  ctx.lineTo(centroX + 150, 1510);
   ctx.stroke();
 
-  ctx.fillStyle = CORES.branco;
-  ctx.font = '800 44px "Just Sans", sans-serif';
-  ctx.fillText(`Meta: ${DESAFIO.metaKg} kg por atlética`, centroX, 1510);
-
-  ctx.font = '800 50px "Just Sans", sans-serif';
-  ctx.fillText(`@${EVENTO.instagram}`, centroX, 1590);
+  if (dados.participante) {
+    const meta = dados.participante.metaKg ?? dados.evento.metaKg;
+    ctx.fillStyle = corClara;
+    ctx.font = '800 42px "Just Sans", sans-serif';
+    ctx.fillText(`Meta: ${meta.toLocaleString("pt-BR")} kg por ${dados.evento.participanteSingular}`, centroX, 1560);
+  }
+  if (dados.evento.instagram) {
+    ctx.fillStyle = corClara;
+    ctx.font = '800 50px "Just Sans", sans-serif';
+    ctx.fillText(`@${dados.evento.instagram}`, centroX, 1640);
+  }
 }
 
 export function canvasParaBlob(canvas: HTMLCanvasElement): Promise<Blob> {

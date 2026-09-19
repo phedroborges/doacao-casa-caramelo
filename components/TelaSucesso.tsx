@@ -1,53 +1,52 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  BOMBOM,
-  DESAFIO,
-  EVENTO,
-  SORTEIOS,
-  VALOR_PARA_CAIXA,
-  concorreACaixa,
-  type Atletica,
-  type BombomId,
-} from "@/lib/config";
+import { useEffect, useRef, useState } from "react";
+import type { EventoPublico, Participante } from "@/lib/modelos";
 import {
   canvasParaBlob,
   carregarFontes,
   desenharCard,
   formatarKg,
+  preencherTextoCompartilhamento,
 } from "@/lib/cardImagem";
 import { Confete } from "@/components/Confete";
 
 type Props = {
   doacaoId: string;
   nome: string;
-  atletica: Atletica;
+  evento: EventoPublico;
+  participante: Participante | null;
   pesoKg: number;
+  valor: number;
   aoRecomecar: () => void;
 };
 
-export function TelaSucesso({ doacaoId, nome, atletica, pesoKg, aoRecomecar }: Props) {
+export function TelaSucesso({
+  doacaoId,
+  nome,
+  evento,
+  participante,
+  pesoKg,
+  valor,
+  aoRecomecar,
+}: Props) {
   const [arquivoCard, setArquivoCard] = useState<File | null>(null);
   const [compartilhou, setCompartilhou] = useState(false);
   const [seguiu, setSeguiu] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const canvas = useRef<HTMLCanvasElement | null>(null);
 
-  const pegouCaixa = concorreACaixa(pesoKg);
-
-  // Deixa o arquivo pronto antes do clique para preservar a ativação do usuário
-  // exigida pela bandeja nativa de compartilhamento.
   useEffect(() => {
+    if (!evento.compartilhamentoAtivo) return;
     let cancelado = false;
     (async () => {
       await carregarFontes();
       const elemento = canvas.current ?? document.createElement("canvas");
       canvas.current = elemento;
-      await desenharCard(elemento, { logoAtletica: atletica.logo, pesoKg });
+      await desenharCard(elemento, { evento, participante, pesoKg });
       const blob = await canvasParaBlob(elemento);
       if (!cancelado) {
-        setArquivoCard(new File([blob], "doacao-casa-caramelo-story.png", { type: "image/png" }));
+        setArquivoCard(new File([blob], `${evento.slug}-story.png`, { type: "image/png" }));
       }
     })().catch(() => {
       if (!cancelado) setAviso("Não consegui preparar o card para o Story.");
@@ -55,31 +54,24 @@ export function TelaSucesso({ doacaoId, nome, atletica, pesoKg, aoRecomecar }: P
     return () => {
       cancelado = true;
     };
-  }, [atletica.logo, pesoKg]);
+  }, [evento, participante, pesoKg]);
 
-  const registrarBombom = useCallback(
-    async (bombom: BombomId) => {
-      // Marca na tela primeiro; se a gravação falhar, não trava o doador.
-      await fetch(`/api/doacoes/${doacaoId}/bombom`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bombom }),
-      }).catch(() => {});
-    },
-    [doacaoId],
-  );
+  async function registrarCompartilhamento() {
+    await fetch(`/api/doacoes/${doacaoId}/compartilhar`, { method: "POST" }).catch(() => {});
+  }
 
-  const textoDoPost = `Eu acabei de doar ${formatarKg(pesoKg)} de ração para os aumigos de Mineiros e te convido a doar também. @${EVENTO.instagram}`;
+  const textoDoPost = `${preencherTextoCompartilhamento(evento, pesoKg)}${
+    evento.instagram ? ` @${evento.instagram}` : ""
+  }`;
 
   async function compartilhar() {
     if (arquivoCard && navigator.canShare?.({ files: [arquivoCard] })) {
       try {
         await navigator.share({ files: [arquivoCard], text: textoDoPost });
         setCompartilhou(true);
-        await registrarBombom("compartilhar");
+        await registrarCompartilhamento();
         return;
       } catch (erro) {
-        // O doador pode ter fechado a bandeja — aí não é erro nenhum.
         if (erro instanceof Error && erro.name === "AbortError") return;
       }
     }
@@ -92,10 +84,11 @@ export function TelaSucesso({ doacaoId, nome, atletica, pesoKg, aoRecomecar }: P
   }
 
   async function seguirInstagram() {
-    window.open(`https://instagram.com/${EVENTO.instagram}`, "_blank", "noopener");
+    window.open(`https://instagram.com/${evento.instagram}`, "_blank", "noopener");
     setSeguiu(true);
-    await registrarBombom("seguir");
   }
+
+  const premiosAlcancados = evento.premios.filter((premio) => valor >= premio.valorMinimo);
 
   return (
     <main className="tela">
@@ -111,89 +104,70 @@ export function TelaSucesso({ doacaoId, nome, atletica, pesoKg, aoRecomecar }: P
       <div className="centro">
         <h2 className="titulo">Doação registrada!</h2>
         <p className="subtitulo">
-          <strong>{formatarKg(pesoKg)}</strong> para {EVENTO.beneficiario}, na conta da{" "}
-          <strong>{atletica.nome}</strong>. Obrigado, {nome.split(" ")[0]}! 🐶
+          <strong>{formatarKg(pesoKg)}</strong> para {evento.beneficiario}
+          {participante ? <>, apoiando <strong>{participante.nome}</strong></> : null}. Obrigado, {nome.split(" ")[0]}! 🐶
         </p>
       </div>
 
-      {/* Confirmação dos sorteios — sem contagem de cupom. */}
-      <section className="sorteios-ok">
-        <span className="chapeu">Você está concorrendo a</span>
-        <ul>
-          {SORTEIOS.itens.map((item) => {
-            const alcancado = item.todos || pegouCaixa;
-            return (
-              <li key={item.id} data-alcancado={alcancado}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.imagem} alt="" />
-                <span>{item.nome}</span>
-                <b>{alcancado ? "✓" : "—"}</b>
-              </li>
-            );
-          })}
-        </ul>
-        {!pegouCaixa && (
-          <p className="sorteios-nota">
-            A caixa de som é só para doações de R$ {VALOR_PARA_CAIXA} pra cima.
-            Dá para doar de novo e concorrer.
-          </p>
-        )}
-        <p className="sorteios-rodape">
-          Resultado dia {SORTEIOS.resultado}, com {SORTEIOS.apuracao}.
-        </p>
-      </section>
-
-      {/* O bombom: um prêmio, três passos, sem sutileza. */}
-      <section className="bombom-bloco" data-feito={compartilhou}>
-        <span className="bombom-chamada">{BOMBOM.chamada}</span>
-        <h3>
-          <span aria-hidden="true">🍬</span> {BOMBOM.titulo}
-        </h3>
-
-        <ol className="bombom-passos">
-          <li data-feito={compartilhou}>
-            <span className="numero">1</span>
-            <span>{BOMBOM.passos[0]}</span>
-          </li>
-          <li data-feito={compartilhou}>
-            <span className="numero">2</span>
-            <span>{BOMBOM.passos[1]}</span>
-          </li>
-          <li data-feito={seguiu}>
-            <span className="numero">3</span>
-            <span>{BOMBOM.passos[2]}</span>
-          </li>
-        </ol>
-
-        <button type="button" className="botao" onClick={compartilhar} disabled={!arquivoCard}>
-          {arquivoCard
-            ? compartilhou
-              ? "✓ Compartilhar de novo"
-              : "Publicar no Instagram Stories"
-            : "Preparando o Story..."}
-        </button>
-        <button type="button" className="botao roxo" onClick={seguirInstagram}>
-          {seguiu ? `✓ Seguindo @${EVENTO.instagram}` : `Seguir @${EVENTO.instagram}`}
-        </button>
-
-        <p className="bombom-retirada">
-          <span aria-hidden="true">📍</span> {BOMBOM.retirada}
-        </p>
-      </section>
-
-      {aviso && (
-        <p className="centro subtitulo" style={{ fontWeight: 800 }}>
-          {aviso}
-        </p>
+      {evento.premios.length > 0 && (
+        <section className="sorteios-ok">
+          <span className="chapeu">Você está concorrendo a</span>
+          <ul>
+            {evento.premios.map((premio) => {
+              const alcancado = valor >= premio.valorMinimo;
+              return (
+                <li key={premio.id} data-alcancado={alcancado}>
+                  {premio.imagem && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={premio.imagem} alt="" />
+                  )}
+                  <span>{premio.nome}</span>
+                  <b>{alcancado ? "✓" : "—"}</b>
+                </li>
+              );
+            })}
+          </ul>
+          {premiosAlcancados.length < evento.premios.length && (
+            <p className="sorteios-nota">Você pode fazer outra doação para alcançar os demais prêmios.</p>
+          )}
+          {evento.resultadoPremios && <p className="sorteios-rodape">Resultado: {evento.resultadoPremios}.</p>}
+        </section>
       )}
 
-      <button type="button" className="botao contorno" onClick={aoRecomecar}>
-        Fazer outra doação
-      </button>
+      {evento.compartilhamentoAtivo && (
+        <section className="bombom-bloco" data-feito={compartilhou}>
+          <span className="bombom-chamada">{evento.chamadaCompartilhamento}</span>
+          {evento.recompensaCompartilhamentoTitulo && (
+            <h3><span aria-hidden="true">🍬</span> {evento.recompensaCompartilhamentoTitulo}</h3>
+          )}
 
-      <p className="rodape">
-        <a href="/ranking">Ver o placar do desafio →</a>
-      </p>
+          <ol className="bombom-passos">
+            <li data-feito={compartilhou}><span className="numero">1</span><span>Compartilhe o card nos seus Stories</span></li>
+            {evento.instagram && (
+              <>
+                <li data-feito={compartilhou}><span className="numero">2</span><span>Marque @{evento.instagram} no Story</span></li>
+                <li data-feito={seguiu}><span className="numero">3</span><span>Siga @{evento.instagram} no Instagram</span></li>
+              </>
+            )}
+          </ol>
+
+          <button type="button" className="botao" onClick={compartilhar} disabled={!arquivoCard}>
+            {arquivoCard ? (compartilhou ? "✓ Compartilhar de novo" : "Publicar no Instagram Stories") : "Preparando o Story..."}
+          </button>
+          {evento.instagram && (
+            <button type="button" className="botao roxo" onClick={seguirInstagram}>
+              {seguiu ? `✓ Seguindo @${evento.instagram}` : `Seguir @${evento.instagram}`}
+            </button>
+          )}
+          {evento.recompensaCompartilhamentoDescricao && (
+            <p className="bombom-retirada"><span aria-hidden="true">📍</span> {evento.recompensaCompartilhamentoDescricao}</p>
+          )}
+        </section>
+      )}
+
+      {aviso && <p className="centro subtitulo" style={{ fontWeight: 800 }}>{aviso}</p>}
+      <button type="button" className="botao contorno" onClick={aoRecomecar}>Fazer outra doação</button>
+      <p className="rodape"><a href={`/evento/${evento.slug}/ranking`}>Ver o placar do evento →</a></p>
     </main>
   );
 }

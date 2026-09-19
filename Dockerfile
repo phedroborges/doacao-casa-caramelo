@@ -20,6 +20,7 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     HOSTNAME=0.0.0.0 \
     PORT=3000 \
+    TZ=America/Sao_Paulo \
     DATA_DIR=/app/data
 
 RUN addgroup --system --gid 1001 nodejs \

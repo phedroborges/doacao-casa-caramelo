@@ -1,68 +1,75 @@
 "use client";
 
-import { SORTEIOS, concorreACaixa, faltaParaCaixaEmReais } from "@/lib/config";
+import type { Premio } from "@/lib/modelos";
 
 type Props = {
-  /** Peso da doação em curso. Sem ele a vitrine fica só apresentando. */
-  pesoKg?: number;
-  /** Chamado pelo botão que completa a doação até alcançar a caixa de som. */
-  aoSubirParaCaixa?: () => void;
-  /** No topo da tela de pagamento a vitrine precisa ocupar pouca altura. */
+  premios: Premio[];
+  valor?: number;
+  aoEscolherValor?: (valor: number) => void;
   compacta?: boolean;
+  resultado?: string;
 };
 
-/**
- * Vitrine dos dois sorteios. Com `pesoKg` ela acende e diz, sem contar
- * cupons, se a doação já está concorrendo. Quando falta para a caixa de som,
- * oferece o atalho para completar — é o empurrão para subir a doação.
- */
-export function Premios({ pesoKg, aoSubirParaCaixa, compacta }: Props) {
-  const ativo = typeof pesoKg === "number" && pesoKg > 0;
-  const pegouCaixa = ativo && concorreACaixa(pesoKg);
+const reais = (valor: number) =>
+  valor.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    maximumFractionDigits: 2,
+  });
 
-  const faltam = ativo ? faltaParaCaixaEmReais(pesoKg) : 0;
-  const valorFaltante = `R$ ${faltam.toLocaleString("pt-BR", { maximumFractionDigits: 0 })}`;
-  const rotuloFalta = `Falta ${valorFaltante}`;
-  const rotuloAtalho = `Falta ${valorFaltante} para você concorrer a caixa`;
+export function Premios({ premios, valor, aoEscolherValor, compacta, resultado }: Props) {
+  if (!premios.length) return null;
+  const ativo = typeof valor === "number" && valor > 0;
 
   return (
-    <section className="premios" data-compacta={compacta} aria-label="Sorteios da campanha">
+    <section className="premios" data-compacta={compacta} aria-label="Prêmios da campanha">
       <header>
-        <span className="chapeu">Doando você concorre a</span>
-        {!compacta && <h2>Dois sorteios</h2>}
+        <span className="chapeu">Doando você pode concorrer a</span>
+        {!compacta && <h2>{premios.length === 1 ? "Um prêmio" : `${premios.length} prêmios`}</h2>}
       </header>
 
       <div className="premios-grade">
-        {SORTEIOS.itens.map((item) => {
-          const alcancado = ativo && (item.todos || pegouCaixa);
-          const mostrarAtalho =
-            ativo && !item.todos && !pegouCaixa && Boolean(aoSubirParaCaixa);
+        {premios.map((premio) => {
+          const alcancado = ativo && valor >= premio.valorMinimo;
+          const falta = ativo ? Math.max(0, premio.valorMinimo - valor) : 0;
+          const mostrarAtalho = ativo && !alcancado && Boolean(aoEscolherValor);
 
           return (
             <article
-              key={item.id}
+              key={premio.id}
               className="premio-item"
               data-alcancado={ativo ? alcancado : undefined}
             >
               <div className="premio-linha">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.imagem} alt={item.nome} />
+                {premio.imagem && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={premio.imagem} alt={premio.nome} />
+                )}
                 <div className="premio-info">
-                  <strong>{item.nome}</strong>
-                  {!compacta && <small>{item.detalhe}</small>}
+                  <strong>{premio.nome}</strong>
+                  {!compacta && premio.detalhe && <small>{premio.detalhe}</small>}
                   {ativo ? (
                     <span className="premio-selo">
-                      {alcancado ? "✓ Concorrendo" : rotuloFalta}
+                      {alcancado ? "✓ Concorrendo" : `Falta ${reais(falta)}`}
                     </span>
                   ) : (
-                    <span className="premio-regra">{item.regra}</span>
+                    <span className="premio-regra">
+                      {premio.regra ||
+                        (premio.valorMinimo > 0
+                          ? `Doações a partir de ${reais(premio.valorMinimo)}`
+                          : "Qualquer doação concorre")}
+                    </span>
                   )}
                 </div>
               </div>
 
               {mostrarAtalho && (
-                <button type="button" className="premio-atalho" onClick={aoSubirParaCaixa}>
-                  {rotuloAtalho}
+                <button
+                  type="button"
+                  className="premio-atalho"
+                  onClick={() => aoEscolherValor?.(premio.valorMinimo)}
+                >
+                  Falta {reais(falta)} para você concorrer a {premio.nome.toLocaleLowerCase("pt-BR")}
                 </button>
               )}
             </article>
@@ -70,11 +77,7 @@ export function Premios({ pesoKg, aoSubirParaCaixa, compacta }: Props) {
         })}
       </div>
 
-      {!compacta && (
-        <p className="premios-rodape">
-          Resultado dia {SORTEIOS.resultado}, com {SORTEIOS.apuracao}.
-        </p>
-      )}
+      {!compacta && resultado && <p className="premios-rodape">Resultado: {resultado}.</p>}
     </section>
   );
 }
