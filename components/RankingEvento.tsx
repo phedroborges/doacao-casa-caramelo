@@ -22,6 +22,56 @@ function medirFormato(evento: SyntheticEvent<HTMLImageElement>) {
   if (imagem.naturalWidth > imagem.naturalHeight * 1.5) imagem.dataset.formato = "largo";
 }
 
+/* Tela cheia: o telão vive numa TV, e a barra do navegador come a faixa de
+   métricas. O botão some sozinho depois que a apresentação começa — ele é
+   para o momento de montar, não para ficar em cena. */
+function BotaoTelaCheia() {
+  const [cheia, setCheia] = useState(false);
+  const [suportado, setSuportado] = useState(false);
+
+  useEffect(() => {
+    setSuportado(typeof document !== "undefined" && document.fullscreenEnabled);
+    const aoTrocar = () => setCheia(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", aoTrocar);
+    return () => document.removeEventListener("fullscreenchange", aoTrocar);
+  }, []);
+
+  /* F alterna, como em player de vídeo. Fica fora de campo de texto para não
+     atrapalhar quem estiver digitando em outra tela do app. */
+  useEffect(() => {
+    const aoTeclar = (evento: KeyboardEvent) => {
+      const alvo = evento.target as HTMLElement | null;
+      if (evento.key.toLowerCase() !== "f" || evento.metaKey || evento.ctrlKey || evento.altKey) return;
+      if (alvo && (alvo.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(alvo.tagName))) return;
+      evento.preventDefault();
+      alternar();
+    };
+    document.addEventListener("keydown", aoTeclar);
+    return () => document.removeEventListener("keydown", aoTeclar);
+  }, []);
+
+  async function alternar() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
+    } catch {
+      /* Navegador pode recusar (permissão, iOS): o placar segue igual. */
+    }
+  }
+
+  if (!suportado) return null;
+  return (
+    <button type="button" className="tela-cheia" onClick={alternar} aria-pressed={cheia} title={`${cheia ? "Sair da tela cheia" : "Tela cheia"} (F)`}>
+      {cheia ? (
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v4a2 2 0 0 1-2 2H3M15 3v4a2 2 0 0 0 2 2h4M9 21v-4a2 2 0 0 0-2-2H3M15 21v-4a2 2 0 0 1 2-2h4" /></svg>
+      ) : (
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9V5a2 2 0 0 1 2-2h4M21 9V5a2 2 0 0 0-2-2h-4M3 15v4a2 2 0 0 0 2 2h4M21 15v4a2 2 0 0 1-2 2h-4" /></svg>
+      )}
+      <span>{cheia ? "Sair" : "Tela cheia"}</span>
+    </button>
+  );
+}
+
 function Escudo({ linha, className = "escudo" }: { linha: LinhaRanking; className?: string }) {
   if (!linha.imagem) {
     return <span className={`${className} escudo-vazio`} aria-hidden="true">{inicial(linha.nome)}</span>;
@@ -34,8 +84,12 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
   const [offline, setOffline] = useState(false);
   const [dica, setDica] = useState<{ linha: LinhaRanking; x: number; y: number } | null>(null);
   const [endereco, setEndereco] = useState("");
+  /* O QR de cada evento é um arquivo em /qr/<slug>.png. Quem não tiver o
+     arquivo simplesmente não mostra o bloco — nada de imagem quebrada. */
+  const [temQr, setTemQr] = useState(true);
 
   useEffect(() => setEndereco(`${window.location.host}/evento/${ranking?.evento.slug ?? ""}`), [ranking?.evento.slug]);
+  useEffect(() => setTemQr(true), [ranking?.evento.slug]);
   useEffect(() => {
     let ativo = true;
     async function buscar() {
@@ -96,10 +150,23 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
         <div><h1>{ranking.evento.nome}</h1><p>meta de {ranking.metaKg} kg por {ranking.evento.participanteSingular}{offline && " · reconectando..."}</p></div>
         {ranking.evento.logoEvento && <img className="selo-laf" src={ranking.evento.logoEvento} alt="Evento" />}
         <div className="agora"><strong className="endereco">doe em {endereco}</strong><span>atualiza a cada {INTERVALO_ATUALIZACAO / 1000}s · {new Date(ranking.atualizadoEm).toLocaleTimeString("pt-BR")}</span></div>
+        <BotaoTelaCheia />
       </header>
 
       <section className="topo-jogo">
-        <div className="hero-total"><span>Ração arrecadada</span><strong>{kg(ranking.totalKg)}</strong><small>{ranking.doacoes} {ranking.doacoes === 1 ? "doação" : "doações"} · {ranking.participantesNaMeta} de {ranking.linhas.length} na meta</small></div>
+        <div className="hero-total">
+          <div className="hero-total-texto">
+            <span>Ração arrecadada</span>
+            <strong>{kg(ranking.totalKg)}</strong>
+            <small>{ranking.doacoes} {ranking.doacoes === 1 ? "doação" : "doações"} · {ranking.participantesNaMeta} de {ranking.linhas.length} na meta</small>
+          </div>
+          {temQr && (
+            <div className="hero-qr">
+              <img src={`/qr/${ranking.evento.slug}.png`} alt={`QR code para doar em ${endereco}`} onError={() => setTemQr(false)} />
+              <span>aponte a câmera e doe</span>
+            </div>
+          )}
+        </div>
         {ranking.evento.premioCompeticaoTitulo && (
           <div className="premio">
             <Trofeu className="premio-trofeu" />
