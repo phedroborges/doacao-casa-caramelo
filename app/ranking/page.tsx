@@ -3,7 +3,7 @@ import { buscarEventoDestaque } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default function RankingPrincipal() {
-  const evento = buscarEventoDestaque();
+export default async function RankingPrincipal() {
+  const evento = await buscarEventoDestaque();
   return evento ? <RankingEvento eventoId={evento.id} /> : <p>Nenhum evento publicado.</p>;
 }

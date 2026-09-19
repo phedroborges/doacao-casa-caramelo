@@ -59,7 +59,7 @@ function statusValido(status: string): StatusEvento {
 
 async function extrairEvento(
   formulario: FormData,
-  atual: ReturnType<typeof buscarEventoPorId>,
+  atual: Awaited<ReturnType<typeof buscarEventoPorId>>,
 ): Promise<DadosEvento> {
   if (!atual) throw new Error("Evento não encontrado.");
   const imagemMarca = await salvarImagem(formulario.get("logoMarcaArquivo"), "marca");
@@ -128,7 +128,7 @@ export async function criarEventoAction(formulario: FormData) {
   const slug = normalizarSlug(valor(formulario, "slug") || nome);
   if (nome.length < 2 || !slug) throw new Error("Informe um nome válido para o evento.");
   const base = dadosNovoEvento();
-  const evento = criarEvento({
+  const evento = await criarEvento({
     ...base,
     nome,
     slug,
@@ -140,16 +140,16 @@ export async function criarEventoAction(formulario: FormData) {
 
 export async function atualizarEventoAction(id: string, formulario: FormData) {
   await exigirAdmin();
-  const atual = buscarEventoPorId(id);
+  const atual = await buscarEventoPorId(id);
   const dados = await extrairEvento(formulario, atual);
-  atualizarEvento(id, dados);
+  await atualizarEvento(id, dados);
   revalidatePath("/", "layout");
   redirect(`/admin/eventos/${id}?salvo=evento`);
 }
 
 async function dadosParticipante(
   formulario: FormData,
-  atual?: ReturnType<typeof buscarParticipante>,
+  atual?: Awaited<ReturnType<typeof buscarParticipante>>,
 ): Promise<DadosParticipante> {
   const nome = valor(formulario, "nome");
   if (nome.length < 1) throw new Error("Informe o nome do participante.");
@@ -168,7 +168,7 @@ async function dadosParticipante(
 
 export async function criarParticipanteAction(eventoId: string, formulario: FormData) {
   await exigirAdmin();
-  criarParticipante(eventoId, await dadosParticipante(formulario));
+  await criarParticipante(eventoId, await dadosParticipante(formulario));
   revalidatePath(`/admin/eventos/${eventoId}`);
   redirect(`/admin/eventos/${eventoId}?salvo=participante#participantes`);
 }
@@ -179,21 +179,22 @@ export async function atualizarParticipanteAction(
   formulario: FormData,
 ) {
   await exigirAdmin();
-  atualizarParticipante(id, await dadosParticipante(formulario, buscarParticipante(id)));
+  const atual = await buscarParticipante(id);
+  await atualizarParticipante(id, await dadosParticipante(formulario, atual));
   revalidatePath("/", "layout");
   redirect(`/admin/eventos/${eventoId}?salvo=participante#participantes`);
 }
 
 export async function excluirParticipanteAction(eventoId: string, id: string) {
   await exigirAdmin();
-  excluirParticipante(id);
+  await excluirParticipante(id);
   revalidatePath("/", "layout");
   redirect(`/admin/eventos/${eventoId}?salvo=participante#participantes`);
 }
 
 async function dadosPremio(
   formulario: FormData,
-  atual?: ReturnType<typeof buscarPremio>,
+  atual?: Awaited<ReturnType<typeof buscarPremio>>,
 ): Promise<DadosPremio> {
   const nome = valor(formulario, "nome");
   if (!nome) throw new Error("Informe o nome do prêmio.");
@@ -211,21 +212,22 @@ async function dadosPremio(
 
 export async function criarPremioAction(eventoId: string, formulario: FormData) {
   await exigirAdmin();
-  criarPremio(eventoId, await dadosPremio(formulario));
+  await criarPremio(eventoId, await dadosPremio(formulario));
   revalidatePath("/", "layout");
   redirect(`/admin/eventos/${eventoId}?salvo=premio#premios`);
 }
 
 export async function atualizarPremioAction(eventoId: string, id: string, formulario: FormData) {
   await exigirAdmin();
-  atualizarPremio(id, await dadosPremio(formulario, buscarPremio(id)));
+  const atual = await buscarPremio(id);
+  await atualizarPremio(id, await dadosPremio(formulario, atual));
   revalidatePath("/", "layout");
   redirect(`/admin/eventos/${eventoId}?salvo=premio#premios`);
 }
 
 export async function excluirPremioAction(eventoId: string, id: string) {
   await exigirAdmin();
-  excluirPremio(id);
+  await excluirPremio(id);
   revalidatePath("/", "layout");
   redirect(`/admin/eventos/${eventoId}?salvo=premio#premios`);
 }
@@ -258,22 +260,22 @@ function dadosCampo(formulario: FormData): DadosCampo {
 
 export async function criarCampoAction(eventoId: string, formulario: FormData) {
   await exigirAdmin();
-  criarCampo(eventoId, dadosCampo(formulario));
+  await criarCampo(eventoId, dadosCampo(formulario));
   revalidatePath(`/admin/eventos/${eventoId}`);
   redirect(`/admin/eventos/${eventoId}?salvo=campo#formulario`);
 }
 
 export async function atualizarCampoAction(eventoId: string, id: string, formulario: FormData) {
   await exigirAdmin();
-  if (!buscarCampo(id)) throw new Error("Campo não encontrado.");
-  atualizarCampo(id, dadosCampo(formulario));
+  if (!(await buscarCampo(id))) throw new Error("Campo não encontrado.");
+  await atualizarCampo(id, dadosCampo(formulario));
   revalidatePath(`/admin/eventos/${eventoId}`);
   redirect(`/admin/eventos/${eventoId}?salvo=campo#formulario`);
 }
 
 export async function excluirCampoAction(eventoId: string, id: string) {
   await exigirAdmin();
-  excluirCampo(id);
+  await excluirCampo(id);
   revalidatePath(`/admin/eventos/${eventoId}`);
   redirect(`/admin/eventos/${eventoId}?salvo=campo#formulario`);
 }

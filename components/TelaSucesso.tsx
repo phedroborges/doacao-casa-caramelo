@@ -13,6 +13,7 @@ import { Confete } from "@/components/Confete";
 
 type Props = {
   doacaoId: string;
+  tokenConfirmacao: string;
   nome: string;
   evento: EventoPublico;
   participante: Participante | null;
@@ -23,6 +24,7 @@ type Props = {
 
 export function TelaSucesso({
   doacaoId,
+  tokenConfirmacao,
   nome,
   evento,
   participante,
@@ -57,7 +59,11 @@ export function TelaSucesso({
   }, [evento, participante, pesoKg]);
 
   async function registrarCompartilhamento() {
-    await fetch(`/api/doacoes/${doacaoId}/compartilhar`, { method: "POST" }).catch(() => {});
+    await fetch(`/api/doacoes/${doacaoId}/compartilhar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: tokenConfirmacao }),
+    }).catch(() => {});
   }
 
   const textoDoPost = `${preencherTextoCompartilhamento(evento, pesoKg)}${

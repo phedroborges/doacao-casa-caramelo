@@ -16,7 +16,7 @@ export async function POST(requisicao: Request) {
   const tipo = String(corpo.tipo ?? "");
   const quantidade = Number(corpo.quantidade);
   const respostasRecebidas = corpo.respostas && typeof corpo.respostas === "object" ? corpo.respostas : {};
-  const evento = buscarEventoCompletoPorId(eventoId);
+  const evento = await buscarEventoCompletoPorId(eventoId);
 
   if (!evento || evento.status === "rascunho") {
     return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
@@ -28,7 +28,7 @@ export async function POST(requisicao: Request) {
   if (nome.length < 2 || nome.length > 60) {
     return NextResponse.json({ erro: "Informe seu nome." }, { status: 400 });
   }
-  const participante = participanteId ? buscarParticipante(participanteId) : null;
+  const participante = participanteId ? await buscarParticipante(participanteId) : null;
   if (
     evento.temParticipantes &&
     (!participante || participante.eventoId !== evento.id || !participante.ativo)
@@ -70,7 +70,7 @@ export async function POST(requisicao: Request) {
 
   const valor = Math.round(quantidade * 100) / 100;
   const pesoKg = Math.round((valor / evento.reaisPorKg) * 100) / 100;
-  const doacao = criarDoacao({
+  const { doacao, tokenConfirmacao } = await criarDoacao({
     eventoId: evento.id,
     participanteId: participante?.id ?? null,
     nome,
@@ -80,7 +80,7 @@ export async function POST(requisicao: Request) {
   });
 
   return NextResponse.json(
-    { doacao, brCode: gerarBrCode(doacao.valor, evento) },
+    { doacao, tokenConfirmacao, brCode: gerarBrCode(doacao.valor, evento) },
     { status: 201 },
   );
 }

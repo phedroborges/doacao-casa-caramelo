@@ -3,8 +3,8 @@ import { buscarEventoDestaque } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default function PaginaInicial() {
-  const evento = buscarEventoDestaque();
+export default async function PaginaInicial() {
+  const evento = await buscarEventoDestaque();
   if (!evento) {
     return (
       <main className="tela centro">

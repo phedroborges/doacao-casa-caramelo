@@ -46,9 +46,9 @@ export default async function EditarEvento({
 }) {
   const { id } = await params;
   const { salvo } = await searchParams;
-  const evento = buscarEventoCompletoPorId(id);
+  const evento = await buscarEventoCompletoPorId(id);
   if (!evento) notFound();
-  const doacoes = contarDoacoesEvento(evento.id);
+  const doacoes = await contarDoacoesEvento(evento.id);
 
   return (
     <div className="admin-pagina admin-editor">

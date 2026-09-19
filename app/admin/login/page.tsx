@@ -5,10 +5,10 @@ import { entrarAction } from "./actions";
 export const dynamic = "force-dynamic";
 
 const MENSAGENS: Record<string, string> = {
-  credenciais: "Usuário ou senha incorretos.",
+  credenciais: "E-mail, senha ou permissão de administrador incorretos.",
   limite: "Muitas tentativas. Aguarde 15 minutos e tente novamente.",
   configuracao:
-    "O painel ainda não foi configurado. Defina ADMIN_PASSWORD e AUTH_SECRET no servidor.",
+    "O painel ainda não foi configurado. Defina as variáveis públicas do projeto Supabase no servidor.",
 };
 
 export default async function LoginAdmin({
@@ -33,8 +33,8 @@ export default async function LoginAdmin({
         {erro && <p className="admin-alerta erro">{MENSAGENS[erro] ?? "Não foi possível entrar."}</p>}
 
         <label>
-          Usuário
-          <input name="usuario" autoComplete="username" required defaultValue="admin" />
+          E-mail
+          <input name="email" type="email" autoComplete="username" required />
         </label>
         <label>
           Senha
@@ -44,9 +44,7 @@ export default async function LoginAdmin({
           Entrar
         </button>
 
-        {process.env.NODE_ENV !== "production" && (
-          <small className="admin-dica">Ambiente local: usuário admin e senha admin-local.</small>
-        )}
+        <small className="admin-dica">Use o usuário autorizado no Supabase Auth.</small>
       </form>
     </main>
   );

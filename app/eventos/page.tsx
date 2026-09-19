@@ -13,8 +13,8 @@ const data = (valor: string, fuso: string) =>
     minute: "2-digit",
   });
 
-export default function EventosPublicos() {
-  const eventos = listarEventosPublicos();
+export default async function EventosPublicos() {
+  const eventos = await listarEventosPublicos();
   return (
     <main className="eventos-publicos">
       <div className="eventos-cabeca">

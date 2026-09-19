@@ -1,9 +1,7 @@
 import "server-only";
 
 import { randomUUID } from "node:crypto";
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { DIRETORIO_DADOS } from "./db";
+import { criarClienteSupabaseServidor } from "./supabase/server";
 
 const TIPOS_PERMITIDOS: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -22,11 +20,15 @@ export async function salvarImagem(
   if (!extensao) throw new Error("Envie uma imagem JPG, PNG, WebP ou GIF.");
   if (arquivo.size > LIMITE_BYTES) throw new Error("A imagem pode ter no máximo 5 MB.");
 
-  const diretorio = join(DIRETORIO_DADOS, "uploads");
-  await mkdir(diretorio, { recursive: true });
-  const nome = `${prefixo.replace(/[^a-z0-9-]/gi, "-")}-${randomUUID()}.${extensao}`;
-  await writeFile(join(diretorio, nome), Buffer.from(await arquivo.arrayBuffer()), {
-    flag: "wx",
-  });
-  return `/media/${nome}`;
+  const supabase = await criarClienteSupabaseServidor();
+  const pasta = prefixo.replace(/[^a-z0-9-]/gi, "-").toLowerCase();
+  const caminho = `${pasta}/${randomUUID()}.${extensao}`;
+  const { error } = await supabase.storage.from("event-media").upload(
+    caminho,
+    Buffer.from(await arquivo.arrayBuffer()),
+    { contentType: arquivo.type, cacheControl: "31536000", upsert: false },
+  );
+  if (error) throw new Error(`Não foi possível enviar a imagem: ${error.message}`);
+
+  return supabase.storage.from("event-media").getPublicUrl(caminho).data.publicUrl;
 }

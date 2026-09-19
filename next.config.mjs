@@ -3,7 +3,7 @@ const nextConfig = {
   // Gera um servidor Node mínimo, ideal para a imagem Docker do Easypanel.
   output: "standalone",
   poweredByHeader: false,
-  // Os arquivos de imagem são locais; nada depende de um otimizador remoto.
+  // O Storage já entrega as imagens otimizáveis por CDN; mantemos o componente nativo simples.
   images: { unoptimized: true },
   experimental: {
     serverActions: {

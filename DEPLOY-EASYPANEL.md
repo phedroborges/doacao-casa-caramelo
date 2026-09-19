@@ -1,6 +1,29 @@
 # Deploy no Easypanel
 
-## 1. Criar o serviço
+O estado da aplicação (eventos, doações, imagens, contas de admin) fica todo no
+Supabase. O container é descartável: não precisa de volume e pode escalar.
+
+## 1. Preparar o Supabase
+
+Antes do primeiro deploy, o projeto precisa estar pronto:
+
+1. **Schema aplicado.** Com o repositório em mãos:
+
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref SEU-PROJECT-REF
+   npx supabase db push
+   ```
+
+2. **Bucket de imagens.** A migration já cria o bucket `event-media` com as
+   políticas de upload restritas a administradores.
+
+3. **Primeiro administrador.** Siga `supabase/bootstrap-admin.sql`: crie a conta
+   em *Authentication > Users* com **Auto Confirm User** ligado e rode o
+   `insert` daquele arquivo. Sem esse passo o painel `/admin` fica inacessível,
+   porque estar no Auth não basta — é preciso estar em `public.admin_users`.
+
+## 2. Criar o serviço
 
 1. Crie um projeto no Easypanel e adicione um serviço **App**.
 2. Conecte o repositório `phedroborges/doacao-casa-caramelo`.
@@ -8,107 +31,81 @@
 4. Use o builder **Dockerfile**, apontando para `Dockerfile`.
 5. Configure a porta interna `3000`.
 
-O container já possui:
+O container já define:
 
 ```text
 NODE_ENV=production
 HOSTNAME=0.0.0.0
 PORT=3000
 TZ=America/Sao_Paulo
-DATA_DIR=/app/data
 ```
 
-## 2. Configurar o painel administrativo
+## 3. Variáveis de ambiente
 
-Adicione estas variáveis ao serviço:
+Apenas duas, as mesmas do `.env.example`:
 
 ```text
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=uma-senha-longa-e-exclusiva
-AUTH_SECRET=uma-chave-aleatoria-com-pelo-menos-32-caracteres
-AUTH_COOKIE_SECURE=true
+NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Uma chave adequada pode ser gerada no computador com:
+As duas são públicas por natureza — a chave `publishable` vai para o navegador
+de qualquer forma. Quem protege os dados é o RLS do banco, não o sigilo dela.
 
-```bash
-openssl rand -hex 32
-```
+A senha do Postgres **não** entra aqui: a aplicação fala com o Supabase pela
+API REST, nunca por conexão direta.
 
-Não coloque esses valores no Git. Se `ADMIN_PASSWORD` ou `AUTH_SECRET` estiverem
-ausentes ou fracos, o site público continua funcionando, mas o painel recusa o
-login.
+> Estas variáveis são lidas no momento do **build** (são `NEXT_PUBLIC_`).
+> Ao trocar qualquer uma delas, refaça o deploy — reiniciar não basta.
 
-## 3. Criar o volume persistente
+## 4. Domínio HTTPS
 
-Antes do primeiro deploy, adicione um volume com o caminho de montagem:
+Configure um domínio com HTTPS. É obrigatório, não opcional: o botão de
+compartilhar usa a bandeja nativa do celular (`navigator.share`), que os
+navegadores só liberam em origem segura. Em HTTP, o compartilhamento cai no
+modo de baixar a imagem.
 
-```text
-/app/data
-```
+## 5. Primeiro deploy
 
-Monte somente `/app/data`, nunca `/app`. Esse volume guarda:
+1. Rode o deploy e acompanhe o log do build.
+2. Confirme o health check em `https://SEU-DOMINIO/api/health` — a resposta
+   esperada é `{"status":"ok"}`, que já testa a conexão com o banco.
+3. Abra `/admin`, entre com a conta criada no passo 1.3 e confira se o evento
+   aparece.
 
-- `casa-caramelo.sqlite` e arquivos auxiliares do SQLite;
-- imagens enviadas pelo painel em `uploads/`;
-- o `doacoes.json` antigo, caso exista para migração.
+## 6. Escala
 
-Sem o volume, eventos, doações e uploads somem quando o container for recriado.
-O processo roda com UID/GID `1001`. Se `/api/health` retornar 503, confirme que
-esse usuário possui leitura e escrita no volume.
-
-## 4. Usar uma única réplica
-
-Configure **exatamente uma réplica**. O SQLite está em um volume local e não
-deve ser aberto por containers diferentes simultaneamente.
-
-Se houver opção de rolling update ou zero-downtime com dois containers ativos,
-deixe-a desativada para este serviço. Faça atualizações fora do pico e aguarde o
-container anterior encerrar antes de o novo começar.
-
-## 5. Domínio e HTTPS
-
-1. Adicione o domínio em **Domains**.
-2. Direcione-o para a porta `3000`.
-3. Ative o certificado HTTPS automático.
-4. Configure o DNS solicitado pelo Easypanel.
-
-HTTPS protege a sessão administrativa e é obrigatório para o navegador enviar
-a imagem do Story a outros aplicativos. Mantenha `AUTH_COOKIE_SECURE=true`.
-
-## 6. Primeiro acesso
-
-Depois do deploy:
-
-1. Abra `/api/health` e confirme `{"status":"ok"}`.
-2. Abra `/admin` e entre com `ADMIN_USERNAME` e `ADMIN_PASSWORD`.
-3. Revise o evento **16ª LAF**.
-4. Confirme participantes, prazo, PIX, prêmios, textos, logos e cores.
-5. Faça uma doação pequena de teste.
-6. Confira o placar e o CSV.
-7. Reinicie o serviço e confirme que os dados e as imagens permanecem.
-
-Na primeira execução, a 16ª LAF é criada automaticamente. Se o volume já tiver
-o arquivo `doacoes.json` da versão anterior, suas doações serão importadas uma
-única vez para esse evento.
+Diferente da versão antiga com SQLite, **não há limite de réplicas** e nenhum
+volume para montar. Todas as instâncias leem e escrevem no mesmo Supabase.
 
 ## 7. Backup
 
-Configure snapshots ou backups recorrentes do volume inteiro `/app/data`.
-Faça uma cópia antes de cada deploy importante e antes/depois de cada evento.
+Use os backups automáticos do próprio Supabase (*Settings > Database >
+Backups*). Não há nada no container para salvar.
 
-O SQLite usa WAL; por isso, prefira o backup de volume do Easypanel. Para uma
-cópia manual consistente, pare o serviço antes de copiar todos os arquivos
-`casa-caramelo.sqlite*` e a pasta `uploads/`.
-
-O CSV de cada evento pode ser baixado pelo painel sem parar o serviço.
+Para uma cópia pontual das doações de um evento, use o botão **Exportar doações
+CSV** dentro do evento, no painel.
 
 ## 8. Atualizações
 
-O auto-deploy da branch `main` pode ser habilitado. Antes de atualizar durante
-uma campanha em andamento:
+1. Faça o deploy da nova versão.
+2. Se a atualização trouxer migrations novas, rode `npx supabase db push`
+   **antes** de promover o novo container.
+3. Confira `/api/health` e uma doação de teste ponta a ponta.
+4. Apague a doação de teste pelo painel.
 
-1. faça backup do volume;
-2. confirme que existe apenas uma réplica;
-3. publique o commit;
-4. confira `/api/health`, o formulário, o ranking e o login do painel.
+## Problemas comuns
+
+**`/admin` devolve ao login mesmo com a senha certa.** A conta existe no Auth
+mas não está em `public.admin_users`, ou foi criada sem *Auto Confirm User*.
+Rode a conferência no fim de `supabase/bootstrap-admin.sql`.
+
+**Health check falha.** Verifique as duas variáveis de ambiente e se o projeto
+Supabase não está pausado (projetos gratuitos pausam por inatividade).
+
+**Compartilhar só baixa a imagem.** O domínio está em HTTP, ou o navegador do
+aparelho não suporta compartilhar arquivos. O card baixado continua válido.
+
+**Doação não aparece no ranking.** Só doações confirmadas entram. Confirmar
+exige o token devolvido na criação; se a pessoa fechou a tela antes de
+confirmar, a doação fica pendente de propósito.

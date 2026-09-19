@@ -25,9 +25,9 @@ export async function entrarAction(formulario: FormData) {
     tentativas.set(ip, { quantidade: 0, reiniciaEm: agora + JANELA });
   }
 
-  const usuario = String(formulario.get("usuario") ?? "").trim();
+  const email = String(formulario.get("email") ?? "").trim().toLowerCase();
   const senha = String(formulario.get("senha") ?? "");
-  if (!(await autenticarAdmin(usuario, senha))) {
+  if (!(await autenticarAdmin(email, senha))) {
     const atual = tentativas.get(ip)!;
     atual.quantidade += 1;
     redirect("/admin/login?erro=credenciais");

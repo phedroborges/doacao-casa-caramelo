@@ -48,22 +48,41 @@ doações mesmo que alguém permaneça com uma página antiga aberta.
 
 ## Desenvolvimento local
 
-Requer Node.js 22 ou mais recente.
+Requer Node.js 22 ou mais recente e um projeto Supabase.
 
 ```bash
 npm ci
+cp .env.example .env.local   # preencha com os dados do seu projeto
 npm run dev
 ```
 
-Sem variáveis locais, o painel de desenvolvimento usa:
+`.env.local` precisa de duas variáveis, ambas públicas (a chave `publishable`
+pode aparecer no navegador; quem protege os dados é o RLS do banco):
 
 ```text
-usuário: admin
-senha: admin-local
+NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 ```
 
-Para testar a build de produção por HTTP local, configure também
-`AUTH_COOKIE_SECURE=false`. Em produção com HTTPS, mantenha o valor `true`.
+### Banco
+
+O schema está em `supabase/migrations/`. Para aplicar num projeto novo:
+
+```bash
+npx supabase login
+npx supabase link --project-ref SEU-PROJECT-REF
+npx supabase db push
+```
+
+### Primeiro acesso ao painel
+
+O login usa **Supabase Auth**: a pessoa autentica com e-mail e senha e o app
+confere se ela está em `public.admin_users`. Um usuário autenticado que não
+esteja nessa tabela é deslogado — estar no Auth não basta.
+
+Para liberar o primeiro acesso, siga `supabase/bootstrap-admin.sql`: criar a
+conta em *Authentication > Users* (com **Auto Confirm User** ligado) e rodar o
+`insert` daquele arquivo com o e-mail.
 
 Comandos de validação:
 
@@ -78,20 +97,23 @@ na mesma rede em `http://IP-DO-COMPUTADOR:3000`.
 
 ## Persistência
 
-Eventos, configurações e doações ficam em SQLite dentro de
-`data/casa-caramelo.sqlite`. As imagens enviadas pelo painel ficam em
-`data/uploads`. Em produção, ambos residem no volume `/app/data`.
+Tudo vive no Supabase:
 
-Se uma instalação antiga possuir `data/doacoes.json`, o conteúdo é importado
-uma única vez para o evento da 16ª LAF. O arquivo original não é apagado.
+- **Postgres** — eventos, participantes, prêmios, campos e doações;
+- **Storage** (bucket `event-media`) — imagens enviadas pelo painel.
 
-Para exportar pelo terminal:
+Toda tabela tem RLS ligado. O público só lê eventos publicados e só consegue
+inserir doações; leitura e edição de doações exigem estar em `admin_users`.
 
-```bash
-npm run export-csv -- 16-laf
-```
+Confirmar uma doação e registrar o compartilhamento passam por funções
+`SECURITY DEFINER` que exigem um **token de 64 caracteres** devolvido só a quem
+criou a doação. O banco guarda apenas o hash SHA-256 desse token, então nem o
+conteúdo do banco permite confirmar doação alheia. O linter do Supabase aponta
+essas funções como executáveis por `anon` — é intencional: o doador não faz
+login, e quem protege é o token.
 
-O painel também possui o botão **Exportar doações CSV** em cada evento.
+Para exportar as doações de um evento, use o botão **Exportar doações CSV** no
+painel, dentro do evento.
 
 ## Compartilhamento
 
@@ -109,11 +131,11 @@ health check e usuário sem privilégios. O procedimento completo está em
 
 Configurações obrigatórias no Easypanel:
 
-- volume persistente em `/app/data`;
-- uma única réplica;
-- domínio HTTPS;
-- `ADMIN_PASSWORD` forte;
-- `AUTH_SECRET` aleatório com pelo menos 32 caracteres.
+- domínio HTTPS (a bandeja de compartilhamento do celular só funciona em HTTPS);
+- `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
+
+Não há mais volume persistente nem limite de uma réplica: o estado todo está no
+Supabase, então a aplicação pode escalar horizontalmente.
 
 ## Estrutura
 
@@ -122,20 +144,24 @@ app/admin/              painel e ações administrativas
 app/evento/             páginas públicas por evento
 app/api/                doações, ranking, exportação e health check
 components/             fluxo público, ranking e componentes visuais
-lib/db.ts               schema SQLite, seed, migração e consultas
+lib/db.ts               consultas ao Supabase
 lib/modelos.ts          contratos de eventos, participantes e doações
-lib/auth.ts             sessão administrativa assinada
-lib/uploads.ts          armazenamento seguro das imagens
+lib/auth.ts             login admin via Supabase Auth + admin_users
+lib/uploads.ts          envio de imagens ao Storage
+lib/supabase/           clientes de servidor e middleware
+supabase/migrations/    schema, RLS e funções
+supabase/bootstrap-admin.sql   libera o primeiro acesso ao painel
 lib/pix.ts              geração e validação do BR Code PIX
 lib/cardImagem.ts       geração do Story no navegador
 ```
 
 ## Segurança e operação
 
-- Nunca publique o conteúdo de `data/`; banco e uploads são ignorados pelo Git.
-- O painel limita tentativas de login e usa cookie HttpOnly, SameSite e Secure.
+- Nunca commite `.env.local`; o `.gitignore` já cobre `.env*`.
+- A senha do banco (`postgres://`) só é necessária para acesso direto; a
+  aplicação não a usa. Se ela vazar, troque em *Settings > Database*.
+- Acesso ao painel é concedido em `public.admin_users`, não por senha no código.
 - Server Actions aceitam somente requisições da mesma origem.
 - Imagens são limitadas a 5 MB e aos formatos JPG, PNG, WebP e GIF.
-- Use apenas uma réplica, pois o banco e os uploads estão em um volume local.
-- Faça backup recorrente de todo o volume `/app/data`.
 - O PIX ainda é confirmado pela própria pessoa; confira o total com o extrato.
+- Backup: use os backups automáticos do próprio Supabase.

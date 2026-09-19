@@ -9,7 +9,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const evento = buscarEventoPublicoPorSlug(slug);
+  const evento = await buscarEventoPublicoPorSlug(slug);
   return evento
     ? { title: `${evento.nome} — Casa Caramelo`, description: evento.descricao }
     : { title: "Evento não encontrado" };
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaEvento({ params }: Props) {
   const { slug } = await params;
-  const evento = buscarEventoPublicoPorSlug(slug);
+  const evento = await buscarEventoPublicoPorSlug(slug);
   if (!evento) notFound();
   return <AplicativoDoacao evento={evento} />;
 }

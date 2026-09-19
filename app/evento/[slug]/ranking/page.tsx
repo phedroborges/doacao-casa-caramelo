@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function RankingDoEvento({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const evento = buscarEventoPublicoPorSlug(slug);
+  const evento = await buscarEventoPublicoPorSlug(slug);
   if (!evento) notFound();
   return <RankingEvento eventoId={evento.id} />;
 }

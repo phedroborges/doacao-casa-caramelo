@@ -10,10 +10,11 @@
     "build": "next build",
     "start": "next start -H 0.0.0.0 -p 3000",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build",
-    "export-csv": "node scripts/export-csv.mjs"
+    "check": "npm run typecheck && npm run build"
   },
   "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.116.0",
     "next": "^15.5.25",
     "qrcode": "1.5.4",
     "react": "19.1.1",
@@ -24,6 +25,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "19.1.13",
     "jsqr": "^1.4.0",
+    "supabase": "2.117.0",
     "typescript": "5.9.2"
   },
   "overrides": {

@@ -11,8 +11,13 @@ const data = (valor: string) =>
     timeZone: "America/Sao_Paulo",
   });
 
-export default function EventosAdmin() {
-  const eventos = listarEventosAdmin();
+export default async function EventosAdmin() {
+  const eventos = await listarEventosAdmin();
+  const contagens = new Map(
+    await Promise.all(
+      eventos.map(async (evento) => [evento.id, await contarDoacoesEvento(evento.id)] as const),
+    ),
+  );
   return (
     <div className="admin-pagina">
       <div className="admin-titulo-linha">
@@ -41,7 +46,7 @@ export default function EventosAdmin() {
               <p>{evento.subtitulo}</p>
               <dl>
                 <div><dt>Encerra</dt><dd>{data(evento.fimEm)}</dd></div>
-                <div><dt>Doações</dt><dd>{contarDoacoesEvento(evento.id)}</dd></div>
+                <div><dt>Doações</dt><dd>{contagens.get(evento.id) ?? 0}</dd></div>
                 <div><dt>Endereço</dt><dd>/evento/{evento.slug}</dd></div>
               </dl>
               <div className="admin-acoes">

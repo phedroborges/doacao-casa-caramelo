@@ -11,11 +11,11 @@ export async function GET(_requisicao: Request, contexto: { params: Promise<{ id
     return NextResponse.json({ erro: "Não autorizado." }, { status: 401 });
   }
   const { id } = await contexto.params;
-  const evento = buscarEventoCompletoPorId(id);
+  const evento = await buscarEventoCompletoPorId(id);
   if (!evento) return NextResponse.json({ erro: "Evento não encontrado." }, { status: 404 });
 
   const participantes = new Map(evento.participantes.map((item) => [item.id, item.nome]));
-  const doacoes = listarDoacoesEvento(id);
+  const doacoes = await listarDoacoesEvento(id);
   const colunas = [
     "id", "nome", "participante", "valor", "pesoKg", "respostas",
     "criadoEm", "confirmadoEm", "compartilhadoEm",

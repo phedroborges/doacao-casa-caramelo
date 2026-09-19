@@ -76,6 +76,7 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
   const [respostas, setRespostas] = useState<Respostas>({});
   const [erro, setErro] = useState<string | null>(null);
   const [doacaoId, setDoacaoId] = useState<string | null>(null);
+  const [tokenConfirmacao, setTokenConfirmacao] = useState<string | null>(null);
   const [pesoKg, setPesoKg] = useState(0);
   const [valor, setValor] = useState(0);
 
@@ -109,7 +110,10 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
     });
     const corpo = await resposta.json().catch(() => ({}));
     if (!resposta.ok) throw new Error(corpo.erro ?? "Não consegui registrar a doação.");
-    return corpo.doacao as { id: string; pesoKg: number; valor: number };
+    return corpo as {
+      doacao: { id: string; pesoKg: number; valor: number };
+      tokenConfirmacao: string;
+    };
   }
 
   function irParaEspera(valorEscolhido: number) {
@@ -120,9 +124,15 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
 
   async function confirmarPix() {
     try {
-      const doacao = await criarDoacao(valor);
-      await fetch(`/api/doacoes/${doacao.id}/confirmar`, { method: "POST" });
+      const { doacao, tokenConfirmacao: token } = await criarDoacao(valor);
+      const resposta = await fetch(`/api/doacoes/${doacao.id}/confirmar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      if (!resposta.ok) throw new Error("Não consegui confirmar a doação.");
       setDoacaoId(doacao.id);
+      setTokenConfirmacao(token);
       setPesoKg(doacao.pesoKg);
       setEtapa("sucesso");
     } catch (falha) {
@@ -138,6 +148,7 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
     setAceite(false);
     setRespostas({});
     setDoacaoId(null);
+    setTokenConfirmacao(null);
     setPesoKg(0);
     setValor(0);
     setErro(null);
@@ -150,8 +161,8 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
     if (etapa === "espera") {
       return <TelaEspera valor={valor} pesoKg={pesoKg} segundosParaConfirmar={evento.segundosConfirmacao} aoConfirmar={confirmarPix} aoVoltar={() => setEtapa("pagamento")} />;
     }
-    if (etapa === "sucesso" && doacaoId) {
-      return <TelaSucesso doacaoId={doacaoId} nome={nome.trim()} evento={evento} participante={participante} pesoKg={pesoKg} valor={valor} aoRecomecar={recomecar} />;
+    if (etapa === "sucesso" && doacaoId && tokenConfirmacao) {
+      return <TelaSucesso doacaoId={doacaoId} tokenConfirmacao={tokenConfirmacao} nome={nome.trim()} evento={evento} participante={participante} pesoKg={pesoKg} valor={valor} aoRecomecar={recomecar} />;
     }
 
     return (
