@@ -1,12 +1,33 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type SyntheticEvent } from "react";
 import type { LinhaRanking, Ranking } from "@/lib/modelos";
 import { Trofeu } from "@/components/Trofeu";
 
 const INTERVALO_ATUALIZACAO = 5000;
+/* O telão só corre com o pelotão da frente: com 13 participantes as barras
+   viravam um paredão ilegível numa TV. Quem ficou para trás aparece na faixa
+   compacta, e a última colocada ganha o card de rebaixamento. */
+const LUGARES_EM_DESTAQUE = 5;
+
 const kg = (valor: number) => `${valor.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} kg`;
 const reais = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const inicial = (nome: string) => nome.trim().charAt(0).toUpperCase();
+
+/* Escudo de atlética é redondo; marca de patrocinador é uma assinatura
+   horizontal, que espremida num círculo vira um fiapo. A proporção do próprio
+   arquivo escolhe a moldura — nada de catalogar marca por marca. */
+function medirFormato(evento: SyntheticEvent<HTMLImageElement>) {
+  const imagem = evento.currentTarget;
+  if (imagem.naturalWidth > imagem.naturalHeight * 1.5) imagem.dataset.formato = "largo";
+}
+
+function Escudo({ linha, className = "escudo" }: { linha: LinhaRanking; className?: string }) {
+  if (!linha.imagem) {
+    return <span className={`${className} escudo-vazio`} aria-hidden="true">{inicial(linha.nome)}</span>;
+  }
+  return <img className={className} src={linha.imagem} alt="" onLoad={medirFormato} />;
+}
 
 export function RankingEvento({ eventoId }: { eventoId: string }) {
   const [ranking, setRanking] = useState<Ranking | null>(null);
@@ -39,6 +60,25 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
   const lider = ranking.linhas[0];
   const temDisputa = Boolean(lider && ranking.totalKg > 0);
   const topo = Math.max(1, ...ranking.linhas.flatMap((linha) => [linha.metaKg, linha.pesoKg]));
+
+  const destaque = ranking.linhas.slice(0, LUGARES_EM_DESTAQUE);
+  const restante = ranking.linhas.slice(LUGARES_EM_DESTAQUE);
+  /* A lanterna é a última da lista. Quando o placar ainda está zerado, meia
+     tabela empata na mesma marca — aí o card diz o empate em vez de eleger
+     uma culpada no sorteio da ordenação. */
+  const lanterna = restante.length > 0 ? restante[restante.length - 1] : null;
+  const empatadosNaLanterna = lanterna
+    ? ranking.linhas.filter((linha) => linha.pesoKg === lanterna.pesoKg).length
+    : 0;
+  /* Só dá para apontar uma lanterna quando ela está sozinha lá embaixo. Com
+     meia tabela empatada (o placar recém-zerado, por exemplo), quem aparece no
+     card seria só a última do desempate — o card então mostra o empate. */
+  const lanternaSozinha = empatadosNaLanterna === 1;
+  /* A última só sai da listagem quando o card de rebaixamento a nomeia. No
+     empate o card não cita ninguém, então ela continua na lista — nenhum
+     participante pode sumir do telão. */
+  const perseguidores = lanternaSozinha ? restante.slice(0, -1) : restante;
+
   const estilo = {
     "--rosa": ranking.evento.corPrimaria,
     "--rosa-escuro": ranking.evento.corPrimaria,
@@ -69,11 +109,14 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
         )}
       </section>
 
-      {ranking.linhas.length > 0 && (
+      {destaque.length > 0 && (
         <section className="painel painel-corrida">
-          <div className="painel-cabeca"><h2>A corrida até as metas</h2><span className="nota">A linha marca a meta de cada {ranking.evento.participanteSingular}. Listrado = excedente.</span></div>
+          <div className="painel-cabeca">
+            <h2>{restante.length > 0 ? `Top ${destaque.length} da corrida` : "A corrida até as metas"}</h2>
+            <span className="nota">A linha marca a meta de cada {ranking.evento.participanteSingular}. Listrado = excedente.</span>
+          </div>
           <ul className="corrida">
-            {ranking.linhas.map((linha, indice) => {
+            {destaque.map((linha, indice) => {
               const larguraTotal = Math.min(100, (linha.pesoKg / topo) * 100);
               const posicaoMeta = Math.min(100, (linha.metaKg / topo) * 100);
               const larguraAteMeta = Math.min(larguraTotal, posicaoMeta);
@@ -81,11 +124,11 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
               return (
                 <li key={linha.participanteId} className="corredor" data-lugar={indice + 1} data-meta={linha.bateuMeta} onMouseMove={(e) => setDica({ linha, x: e.clientX, y: e.clientY })} onMouseLeave={() => setDica(null)}>
                   <span className="lugar">{indice + 1}º</span>
-                  {linha.imagem ? <img className="escudo" src={linha.imagem} alt="" /> : <span className="escudo escudo-vazio" />}
+                  <Escudo linha={linha} />
                   <div className="pista">
                     <div className="pista-rotulos"><span className="pista-nome">{linha.nome}{linha.grupo && <span className="chave">{linha.grupo}</span>}{linha.bateuMeta && <span className="selo-meta">🏆 META BATIDA</span>}</span><span className="pista-valor">{kg(linha.pesoKg)} <i>· {linha.percentual}%</i></span></div>
                     <div className="trilho" role="img" aria-label={`${linha.nome}: ${kg(linha.pesoKg)}, ${linha.percentual}% da meta de ${linha.metaKg} kg`}>
-                      <div className="barra" style={{ width: `${larguraAteMeta}%` }} />
+                      {linha.pesoKg > 0 && <div className="barra" style={{ width: `${larguraAteMeta}%` }} />}
                       {larguraExcedente > 0 && <div className="barra-excedente" style={{ left: `${posicaoMeta}%`, width: `${larguraExcedente}%` }} />}
                       {posicaoMeta < 100 && <div className="linha-meta" style={{ left: `${posicaoMeta}%` }} />}
                     </div>
@@ -94,8 +137,52 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
               );
             })}
           </ul>
-          <details className="ver-tabela"><summary>Ver os mesmos dados em tabela</summary><div><table className="tabela-dados"><caption>Doações convertidas em quilos por participante.</caption><thead><tr><th scope="col">Participante</th><th scope="col">Grupo</th><th scope="col">Total</th><th scope="col">% da meta</th><th scope="col">Via PIX</th><th scope="col">Doações</th></tr></thead><tbody>{ranking.linhas.map((linha) => <tr key={linha.participanteId}><td>{linha.nome}</td><td>{linha.grupo || "—"}</td><td>{kg(linha.pesoKg)}</td><td>{linha.percentual}%</td><td>{reais(linha.reais)}</td><td>{linha.doacoes}</td></tr>)}</tbody></table></div></details>
         </section>
+      )}
+
+      {lanterna && (
+        <section className="fundo-tabela">
+          {perseguidores.length > 0 && (
+            <div className="painel pelotao">
+              <h3>Demais colocações</h3>
+              <ul>
+                {perseguidores.map((linha, indice) => (
+                  <li key={linha.participanteId} onMouseMove={(e) => setDica({ linha, x: e.clientX, y: e.clientY })} onMouseLeave={() => setDica(null)}>
+                    <span className="lugar">{LUGARES_EM_DESTAQUE + indice + 1}º</span>
+                    <Escudo linha={linha} className="escudo escudo-mini" />
+                    <span className="pelotao-nome">{linha.nome}</span>
+                    <span className="pelotao-valor">{kg(linha.pesoKg)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div className="rebaixamento" onMouseMove={(e) => lanternaSozinha && setDica({ linha: lanterna, x: e.clientX, y: e.clientY })} onMouseLeave={() => setDica(null)}>
+            <span className="rebaixamento-faixa">⚠ Zona de rebaixamento</span>
+            <div className="rebaixamento-corpo">
+              {lanternaSozinha && <Escudo linha={lanterna} className="escudo escudo-lanterna" />}
+              <div className="rebaixamento-texto">
+                {lanternaSozinha ? (
+                  <>
+                    <strong>{lanterna.nome}</strong>
+                    <em>{kg(lanterna.pesoKg)} <i>· {lanterna.percentual}%</i></em>
+                    <small>faltam {kg(Math.max(0, lanterna.metaKg - lanterna.pesoKg))} para a meta</small>
+                  </>
+                ) : (
+                  <>
+                    <strong>{empatadosNaLanterna} {ranking.evento.participantePlural} empatadas</strong>
+                    <em>{kg(lanterna.pesoKg)}</em>
+                    <small>a primeira a doar sai daqui</small>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {ranking.linhas.length > 0 && (
+        <details className="ver-tabela"><summary>Ver os mesmos dados em tabela</summary><div><table className="tabela-dados"><caption>Doações convertidas em quilos por participante.</caption><thead><tr><th scope="col">#</th><th scope="col">Participante</th><th scope="col">Grupo</th><th scope="col">Total</th><th scope="col">% da meta</th><th scope="col">Via PIX</th><th scope="col">Doações</th></tr></thead><tbody>{ranking.linhas.map((linha, indice) => <tr key={linha.participanteId}><td>{indice + 1}º</td><td>{linha.nome}</td><td>{linha.grupo || "—"}</td><td>{kg(linha.pesoKg)}</td><td>{linha.percentual}%</td><td>{reais(linha.reais)}</td><td>{linha.doacoes}</td></tr>)}</tbody></table></div></details>
       )}
 
       <section className="metricas">
