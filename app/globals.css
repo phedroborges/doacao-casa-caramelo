@@ -1,0 +1,1958 @@
+/* ---------------------------------------------------------------
+   Casa Caramelo — Desafio das Atléticas
+   Rosa vivo #FF0197 como fundo (o mesmo dos slides da marca), com
+   cartões claros por cima. Roxo #9100E5 marca conquista, amarelo
+   #FECB00 é a ação principal.
+
+   Contrastes conferidos:
+     ameixa sobre rosa vivo ....... 5,06:1  AA
+     branco sobre rosa vivo ....... 3,62:1  AA (texto grande)
+     creme/amarelo sobre rosa ..... REPROVAM — nunca como texto no rosa
+     ameixa sobre cartão creme .... 17,04:1 AAA
+     ameixa sobre amarelo ......... 12,20:1 AAA  (botão principal)
+     branco sobre roxo ............ 6,19:1  AA   (botão secundário)
+   Cores de dado (rosa + roxo sobre cartão claro) passam nos seis
+   checks do validador: faixa de luminosidade, croma, CVD e contraste.
+   --------------------------------------------------------------- */
+
+@font-face {
+  font-family: "Ketchup Manis";
+  src: url("/marca/fonts/KetchupManis.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Just Sans";
+  src: url("/marca/fonts/JustSans-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Just Sans";
+  src: url("/marca/fonts/JustSans-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Just Sans";
+  src: url("/marca/fonts/JustSans-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Just Sans";
+  src: url("/marca/fonts/JustSans-ExBold.otf") format("opentype");
+  font-weight: 800;
+  font-display: swap;
+}
+
+:root {
+  --rosa: #ff0197;
+  --rosa-escuro: #d40080;
+  --roxo: #9100e5;
+  --roxo-escuro: #6b00ab;
+  --amarelo: #fecb00;
+  --amarelo-escuro: #e0b200;
+  --creme: #ffe5a4;
+  --branco: #fffdf7;
+  --ameixa: #2c0020;
+
+  /* Superfícies */
+  --cartao: #fff4dc;
+  --cartao-claro: #fffdf7;
+  --trilho: #fffdf7;
+
+  /* Tinta — sempre ameixa sobre claro, branco sobre rosa/roxo. */
+  --tinta: #2c0020;
+  --tinta-2: rgba(44, 0, 32, 0.74);
+  --tinta-3: rgba(44, 0, 32, 0.56);
+  --linha: rgba(44, 0, 32, 0.13);
+
+  --display: "Ketchup Manis", "Just Sans", system-ui, sans-serif;
+  --texto: "Just Sans", system-ui, -apple-system, sans-serif;
+
+  --raio: 22px;
+  --raio-g: 32px;
+  --sombra: 0 7px 0 rgba(44, 0, 32, 0.24);
+
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100dvh;
+  background: var(--rosa);
+  color: var(--tinta);
+  font-family: var(--texto);
+  font-size: 16px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Manchas do cachorro caramelo, grafismo de apoio da marca. */
+.fundo-manchas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fundo-manchas span {
+  position: absolute;
+  background: rgba(44, 0, 32, 0.08);
+  border-radius: 48% 52% 62% 38% / 55% 45% 55% 45%;
+}
+.fundo-manchas span:nth-child(1) {
+  width: 62vw;
+  height: 40vw;
+  top: -8vw;
+  left: -18vw;
+}
+.fundo-manchas span:nth-child(2) {
+  width: 46vw;
+  height: 30vw;
+  bottom: 12vh;
+  right: -14vw;
+  border-radius: 62% 38% 45% 55% / 40% 60% 40% 60%;
+}
+.fundo-manchas span:nth-child(3) {
+  width: 34vw;
+  height: 22vw;
+  bottom: -6vw;
+  left: 8vw;
+  border-radius: 40% 60% 55% 45% / 60% 40% 60% 40%;
+}
+
+/* --- Estrutura da tela (mobile-first, é um app de celular) --- */
+
+.tela {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 20px) 20px
+    calc(env(safe-area-inset-bottom, 0px) + 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.marca {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+/* Casa Caramelo × LAF: o desafio é das duas marcas juntas. */
+.marca-selos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.marca-selos > span {
+  font: 700 20px var(--texto);
+  color: var(--branco);
+  opacity: 0.7;
+}
+.marca img {
+  width: 84px;
+  height: 84px;
+  filter: drop-shadow(0 5px 0 rgba(44, 0, 32, 0.2));
+}
+.marca img.marca-laf {
+  width: 128px;
+  height: auto;
+  filter: none;
+}
+/* Título em branco: grande o bastante para os 3,62:1 valerem. */
+.marca h1 {
+  font-family: var(--display);
+  font-size: clamp(30px, 9vw, 38px);
+  line-height: 1;
+  margin: 0;
+  color: var(--branco);
+  text-shadow: 0 4px 0 rgba(44, 0, 32, 0.22);
+}
+.marca p {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--tinta);
+  font-weight: 500;
+}
+
+/* --- Cartão --- */
+
+.cartao {
+  background: var(--cartao);
+  border-radius: var(--raio-g);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  box-shadow: var(--sombra);
+}
+
+/* --- Campos --- */
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.campo > label {
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--rosa-escuro);
+}
+.campo input,
+.campo select {
+  width: 100%;
+  /* 16px impede o iOS de dar zoom ao focar. */
+  font: 500 16px var(--texto);
+  color: var(--tinta);
+  background: var(--cartao-claro);
+  border: 3px solid var(--linha);
+  border-radius: var(--raio);
+  padding: 14px 16px;
+  appearance: none;
+  transition: border-color 0.15s ease;
+}
+.campo select {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232C0020'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 22px;
+  padding-right: 42px;
+}
+.campo input:focus,
+.campo select:focus {
+  outline: none;
+  border-color: var(--rosa);
+}
+.campo input::placeholder {
+  color: var(--tinta-3);
+}
+.campo .erro {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--rosa-escuro);
+}
+.campo .dica {
+  font-size: 13px;
+  color: var(--tinta-3);
+}
+
+/* --- Botões --- */
+
+.botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  font: 400 22px/1 var(--display);
+  letter-spacing: 0.02em;
+  padding: 18px 20px;
+  border: none;
+  border-radius: var(--raio);
+  cursor: pointer;
+  /* Principal: ameixa sobre amarelo, 12,20:1. */
+  background: var(--amarelo);
+  color: var(--ameixa);
+  box-shadow: 0 7px 0 var(--amarelo-escuro);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+}
+.botao:active:not(:disabled) {
+  transform: translateY(5px);
+  box-shadow: 0 2px 0 var(--amarelo-escuro);
+}
+.botao:disabled {
+  background: rgba(255, 253, 247, 0.42);
+  color: rgba(44, 0, 32, 0.45);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+/* Secundário: branco sobre roxo, 6,19:1. */
+.botao.roxo {
+  background: var(--roxo);
+  color: var(--branco);
+  box-shadow: 0 7px 0 var(--roxo-escuro);
+}
+.botao.roxo:active:not(:disabled) {
+  box-shadow: 0 2px 0 var(--roxo-escuro);
+}
+.botao.creme {
+  background: var(--cartao-claro);
+  color: var(--ameixa);
+  box-shadow: 0 7px 0 rgba(44, 0, 32, 0.2);
+}
+.botao.creme:active:not(:disabled) {
+  box-shadow: 0 2px 0 rgba(44, 0, 32, 0.2);
+}
+.botao.contorno {
+  background: transparent;
+  color: var(--ameixa);
+  border: 3px solid rgba(44, 0, 32, 0.28);
+  box-shadow: none;
+  font-size: 17px;
+}
+.botao.contorno:active:not(:disabled) {
+  transform: none;
+  background: rgba(44, 0, 32, 0.07);
+}
+
+/* --- Escolha do tipo de doação --- */
+
+.escolha-tipo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.escolha-tipo button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 16px 10px;
+  border-radius: var(--raio);
+  border: 3px solid var(--linha);
+  background: var(--cartao-claro);
+  color: var(--tinta);
+  cursor: pointer;
+  font: 800 14px var(--texto);
+  text-align: center;
+  transition: all 0.15s ease;
+}
+.escolha-tipo button .emoji {
+  font-size: 27px;
+  line-height: 1;
+}
+.escolha-tipo button small {
+  font-weight: 500;
+  font-size: 11.5px;
+  color: var(--tinta-3);
+}
+.escolha-tipo button[aria-pressed="true"] {
+  background: var(--rosa);
+  border-color: var(--rosa);
+  color: var(--branco);
+}
+.escolha-tipo button[aria-pressed="true"] small {
+  color: rgba(255, 253, 247, 0.9);
+}
+
+/* --- Valores sugeridos --- */
+
+.valores {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.valores button {
+  font: 800 15px var(--texto);
+  padding: 12px 4px;
+  border-radius: 16px;
+  border: 3px solid var(--linha);
+  background: var(--cartao-claro);
+  color: var(--tinta);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.valores button[aria-pressed="true"] {
+  background: var(--rosa);
+  border-color: var(--rosa);
+  color: var(--branco);
+}
+
+/* --- Equivalência R$ ↔ kg --- */
+
+.equivalencia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: var(--raio);
+  background: var(--roxo);
+  color: var(--branco);
+  text-align: left;
+}
+/* Sem o nowrap, "+7,5 kg" quebra entre o número e a unidade. */
+.equivalencia strong {
+  flex: none;
+  font: 400 26px/1 var(--display);
+  color: var(--amarelo);
+  white-space: nowrap;
+}
+.equivalencia span {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--branco);
+}
+.equivalencia span strong {
+  font: inherit;
+  font-weight: 800;
+  color: var(--amarelo);
+}
+/* A conversão é uma unidade só: não pode quebrar entre o "5" e o "kg". */
+.equivalencia span i {
+  display: inline-block;
+  font-style: normal;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.equivalencia a {
+  color: var(--amarelo);
+}
+
+/* --- Aceite do termo --- */
+
+.termo {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--tinta-2);
+  cursor: pointer;
+  /* O label inteiro é o alvo, então ele é que precisa da altura. */
+  min-height: 44px;
+  padding: 4px 0;
+}
+.termo input {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  margin: 0;
+  accent-color: var(--rosa);
+}
+.termo button {
+  padding: 2px 0;
+}
+.termo button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: var(--rosa-escuro);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* --- QR code --- */
+
+.qr {
+  background: var(--cartao-claro);
+  border-radius: var(--raio-g);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--sombra);
+}
+.qr img {
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  image-rendering: pixelated;
+  border-radius: 8px;
+}
+.qr .valor-no-qr {
+  font: 400 27px/1 var(--display);
+  color: var(--rosa-escuro);
+}
+.qr .aviso {
+  font-size: 12.5px;
+  text-align: center;
+  color: var(--tinta-3);
+  line-height: 1.35;
+}
+
+.copia-cola {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.copia-cola code {
+  display: block;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.5;
+  word-break: break-all;
+  background: var(--cartao);
+  border-radius: 14px;
+  padding: 12px 14px;
+  max-height: 84px;
+  overflow: hidden;
+  color: var(--tinta-2);
+}
+
+/* --- Espera --- */
+
+.espera {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+  padding: 24px 0;
+}
+.anel {
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  border: 9px solid rgba(255, 253, 247, 0.4);
+  border-top-color: var(--amarelo);
+  animation: girar 1s linear infinite;
+}
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.contador {
+  font: 400 46px/1 var(--display);
+  color: var(--branco);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 0 rgba(44, 0, 32, 0.22);
+}
+
+/* --- Sucesso --- */
+
+.selo-ok {
+  width: 116px;
+  height: 116px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--amarelo);
+  display: grid;
+  place-items: center;
+  animation: pular 0.55s cubic-bezier(0.2, 1.4, 0.5, 1);
+  box-shadow: 0 8px 0 var(--amarelo-escuro);
+}
+.selo-ok svg {
+  width: 60px;
+  height: 60px;
+}
+@keyframes pular {
+  from {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+}
+
+.bombom {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-radius: var(--raio);
+  background: var(--cartao-claro);
+  border: 3px solid var(--linha);
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.bombom[data-ganho="true"] {
+  background: var(--roxo);
+  border-color: var(--roxo);
+}
+.bombom .icone {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  font-size: 24px;
+  border-radius: 50%;
+  background: var(--cartao);
+}
+.bombom[data-ganho="true"] .icone {
+  background: var(--amarelo);
+}
+.bombom strong {
+  display: block;
+  font-size: 15px;
+  color: var(--tinta);
+}
+.bombom small {
+  display: block;
+  font-size: 12.5px;
+  color: var(--tinta-3);
+}
+.bombom[data-ganho="true"] strong {
+  color: var(--branco);
+}
+.bombom[data-ganho="true"] small {
+  color: rgba(255, 253, 247, 0.82);
+}
+.bombom .marca-ok {
+  flex: none;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--rosa-escuro);
+}
+.bombom[data-ganho="true"] .marca-ok {
+  color: var(--amarelo);
+}
+
+.placar-bombons {
+  font: 400 20px/1 var(--display);
+  color: var(--ameixa);
+  background: var(--amarelo);
+  border-radius: 999px;
+  padding: 11px 18px;
+  text-align: center;
+  box-shadow: 0 5px 0 var(--amarelo-escuro);
+}
+
+/* --- Confete da comemoração --- */
+
+.confete {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confete span {
+  position: absolute;
+  top: -24px;
+  animation-name: cair;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+@keyframes cair {
+  from {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(105vh) rotate(var(--giro, 360deg));
+    opacity: 0;
+  }
+}
+
+/* --- Confete da comemoração --- */
+
+.confete {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confete span {
+  position: absolute;
+  top: -24px;
+  animation-name: cair;
+  animation-timing-function: linear;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+@keyframes cair {
+  from {
+    transform: translateY(-10vh) rotate(0deg);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(105vh) rotate(var(--giro, 360deg));
+    opacity: 0;
+  }
+}
+
+/* --- Voltar --- */
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  background: rgba(44, 0, 32, 0.16);
+  border: none;
+  border-radius: 999px;
+  color: var(--branco);
+  font: 700 13.5px var(--texto);
+  padding: 10px 16px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.voltar span {
+  font-size: 17px;
+  line-height: 1;
+}
+.voltar:disabled {
+  opacity: 0.5;
+}
+
+/* --- Vitrine dos sorteios ---
+   É o principal motivo de a pessoa doar, então fica no topo da tela de
+   pagamento, em versão compacta, para o PIX caber sem rolagem. */
+
+.premios {
+  background: var(--ameixa);
+  border-radius: var(--raio-g);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  box-shadow: var(--sombra);
+}
+.premios > header {
+  text-align: center;
+}
+.premios .chapeu {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--creme);
+}
+.premios h2 {
+  margin: 2px 0 0;
+  font: 400 30px/1 var(--display);
+  color: var(--amarelo);
+}
+
+.premios-grade {
+  display: grid;
+  gap: 8px;
+}
+
+.premio-item {
+  padding: 9px 11px;
+  border-radius: var(--raio);
+  background: rgba(255, 253, 247, 0.07);
+  border: 2px solid rgba(255, 229, 164, 0.2);
+  transition: all 0.25s ease;
+}
+.premio-linha {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  gap: 11px;
+}
+.premio-item img {
+  width: 64px;
+  height: 52px;
+  object-fit: contain;
+}
+.premio-info strong {
+  display: block;
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--branco);
+  line-height: 1.15;
+}
+.premio-info small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--creme);
+  opacity: 0.85;
+  line-height: 1.3;
+  margin-top: 1px;
+}
+.premio-regra,
+.premio-selo {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--ameixa);
+  background: var(--creme);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+/* Alcançado pelo valor digitado: acende. Fora de alcance: recua. */
+.premio-item[data-alcancado="true"] {
+  background: rgba(254, 203, 0, 0.18);
+  border-color: var(--amarelo);
+}
+.premio-item[data-alcancado="true"] .premio-selo {
+  background: var(--amarelo);
+}
+.premio-item[data-alcancado="false"] .premio-linha {
+  opacity: 0.62;
+}
+.premio-item[data-alcancado="false"] .premio-selo {
+  background: rgba(255, 229, 164, 0.3);
+  color: var(--branco);
+}
+
+/* O atalho que completa a doação até alcançar a caixa de som. */
+.premio-atalho {
+  display: block;
+  width: 100%;
+  margin-top: 9px;
+  background: var(--amarelo);
+  color: var(--ameixa);
+  border: none;
+  border-radius: 14px;
+  font: 800 13.5px var(--texto);
+  padding: 12px 10px;
+  min-height: 44px;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--amarelo-escuro);
+}
+.premio-atalho:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--amarelo-escuro);
+}
+
+.premios-rodape {
+  margin: 0;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--creme);
+  opacity: 0.75;
+}
+
+/* Versão compacta: some o título e os detalhes, encolhe tudo. */
+.premios[data-compacta="true"] {
+  padding: 12px;
+  gap: 9px;
+}
+.premios[data-compacta="true"] .premio-item img {
+  width: 54px;
+  height: 44px;
+}
+.premios[data-compacta="true"] .premio-linha {
+  grid-template-columns: 54px 1fr;
+  gap: 9px;
+}
+
+/* --- Tela de pagamento: tudo tem que caber sem rolar --- */
+
+.tela-pagamento {
+  gap: 12px;
+}
+
+.meta-doacao {
+  background: var(--cartao-claro);
+  border-radius: var(--raio-g);
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--sombra);
+}
+.meta-doacao-cabeca {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.meta-doacao-cabeca img {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--branco);
+  object-fit: contain;
+  padding: 7px;
+  box-shadow: 0 0 0 2px var(--linha);
+}
+.meta-doacao-cabeca span,
+.meta-doacao-cabeca strong {
+  display: block;
+}
+.meta-doacao-cabeca span {
+  color: var(--rosa-escuro);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.meta-doacao-cabeca strong {
+  color: var(--ameixa);
+  font: 400 20px/1.1 var(--display);
+  margin-top: 2px;
+}
+.meta-doacao-trilho {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(44, 0, 32, 0.11);
+}
+.meta-doacao-trilho span {
+  display: block;
+  height: 100%;
+  min-width: 3px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--rosa), var(--roxo));
+  transition: width 0.5s ease;
+}
+.meta-doacao p,
+.meta-doacao small {
+  margin: 0;
+  color: var(--tinta-2);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.meta-doacao small {
+  color: var(--roxo-escuro);
+  font-weight: 800;
+}
+
+.cartao-valor {
+  padding: 14px;
+  gap: 11px;
+}
+.cartao-valor .campo input {
+  padding: 13px 15px;
+}
+
+.valores-doacao {
+  grid-template-columns: repeat(3, 1fr);
+}
+.valores-doacao button {
+  min-height: 48px;
+}
+.valores-doacao button span,
+.valores-doacao button small {
+  display: block;
+}
+.valores-doacao button small {
+  margin-top: 2px;
+  font-size: 11.5px;
+}
+.valores-doacao button[data-destaque="true"] {
+  grid-column: 1 / -1;
+  padding: 13px 12px;
+  background: var(--amarelo);
+  border-color: var(--amarelo-escuro);
+  color: var(--ameixa);
+  box-shadow: 0 4px 0 var(--amarelo-escuro);
+}
+.valores-doacao button[data-destaque="true"][aria-pressed="true"] {
+  background: var(--roxo);
+  border-color: var(--roxo-escuro);
+  color: var(--branco);
+  box-shadow: 0 4px 0 var(--roxo-escuro);
+}
+
+.pagar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pagar-qr {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 14px;
+  background: var(--cartao-claro);
+  border-radius: var(--raio-g);
+  padding: 14px;
+  box-shadow: var(--sombra);
+}
+.pagar-qr > img {
+  width: 132px;
+  height: 132px;
+  image-rendering: pixelated;
+  border-radius: 8px;
+}
+.pagar-resumo strong {
+  display: block;
+  font: 400 30px/1 var(--display);
+  color: var(--rosa-escuro);
+}
+.pagar-resumo span {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--tinta-2);
+  margin-top: 2px;
+}
+.pagar-resumo small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--tinta-3);
+  line-height: 1.3;
+  margin-top: 6px;
+}
+
+.botao-texto {
+  background: none;
+  border: none;
+  color: var(--ameixa);
+  font: 700 13.5px var(--texto);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 12px;
+  min-height: 44px;
+}
+
+/* --- Espera --- */
+
+.tela-espera {
+  justify-content: space-between;
+}
+.espera-mensagem {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tinta);
+  min-height: 1.4em;
+}
+.espera-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- Sorteios confirmados, na tela de sucesso --- */
+
+.sorteios-ok {
+  background: var(--ameixa);
+  border-radius: var(--raio-g);
+  padding: 16px;
+  text-align: center;
+  box-shadow: var(--sombra);
+}
+.sorteios-ok .chapeu {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--creme);
+  margin-bottom: 10px;
+}
+.sorteios-ok ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+}
+.sorteios-ok li {
+  display: grid;
+  grid-template-columns: 46px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 7px 11px;
+  border-radius: 15px;
+  background: rgba(255, 253, 247, 0.07);
+  border: 2px solid rgba(255, 229, 164, 0.18);
+}
+.sorteios-ok li[data-alcancado="true"] {
+  background: rgba(254, 203, 0, 0.18);
+  border-color: var(--amarelo);
+}
+.sorteios-ok li[data-alcancado="false"] {
+  opacity: 0.5;
+}
+.sorteios-ok li img {
+  width: 46px;
+  height: 38px;
+  object-fit: contain;
+}
+.sorteios-ok li span {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--branco);
+}
+.sorteios-ok li b {
+  font-size: 16px;
+  color: var(--amarelo);
+}
+.sorteios-nota,
+.sorteios-rodape {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--creme);
+}
+.sorteios-nota {
+  background: rgba(255, 253, 247, 0.08);
+  border-radius: 13px;
+  padding: 9px 11px;
+}
+.sorteios-rodape {
+  opacity: 0.72;
+  font-size: 11.5px;
+}
+
+/* --- O bombom: um prêmio, três passos, sem sutileza --- */
+
+.bombom-bloco {
+  background: var(--roxo);
+  border-radius: var(--raio-g);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+  box-shadow: 0 7px 0 var(--roxo-escuro);
+}
+.bombom-chamada {
+  font: 800 12px var(--texto);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amarelo);
+}
+.bombom-bloco h3 {
+  margin: -6px 0 0;
+  font: 400 27px/1.05 var(--display);
+  color: var(--branco);
+}
+.bombom-passos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 7px;
+  text-align: left;
+}
+.bombom-passos li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  align-items: center;
+  gap: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--branco);
+  background: rgba(255, 253, 247, 0.12);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+.bombom-passos .numero {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--amarelo);
+  color: var(--ameixa);
+  font-weight: 800;
+  font-size: 14px;
+}
+.bombom-passos li[data-feito="true"] {
+  background: rgba(254, 203, 0, 0.26);
+}
+.bombom-passos li[data-feito="true"] .numero::after {
+  content: "✓";
+}
+.bombom-passos li[data-feito="true"] .numero {
+  font-size: 15px;
+  color: var(--ameixa);
+}
+.bombom-passos li[data-feito="true"] .numero {
+  text-indent: -9999px;
+}
+.bombom-passos li[data-feito="true"] .numero::after {
+  text-indent: 0;
+  display: block;
+}
+.bombom-retirada {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--branco);
+  background: var(--ameixa);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+/* --- Card, recolhido: quem quiser conferir antes de postar --- */
+
+.ver-card > summary {
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ameixa);
+  list-style: none;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.ver-card > summary::-webkit-details-marker {
+  display: none;
+}
+.ver-card > summary::before {
+  content: "▸ ";
+  margin-right: 6px;
+}
+.ver-card[open] > summary::before {
+  content: "▾ ";
+}
+.ver-card > div {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* ===============================================================
+   DASHBOARD — o "jogo"
+   =============================================================== */
+
+.telao {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  padding: clamp(16px, 2.4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.8vw, 24px);
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.telao-topo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.telao-topo > img {
+  width: clamp(54px, 5vw, 86px);
+  height: auto;
+  filter: drop-shadow(0 5px 0 rgba(44, 0, 32, 0.2));
+}
+.telao-topo h1 {
+  font: 400 clamp(26px, 3.6vw, 52px) / 0.95 var(--display);
+  color: var(--branco);
+  margin: 0;
+  text-shadow: 0 5px 0 rgba(44, 0, 32, 0.22);
+}
+.telao-topo p {
+  margin: 4px 0 0;
+  color: var(--tinta);
+  font-size: clamp(12px, 1.1vw, 16px);
+  font-weight: 600;
+}
+.telao-topo .selo-laf {
+  width: clamp(110px, 11vw, 190px);
+  height: auto;
+  margin-left: clamp(8px, 1.4vw, 22px);
+  align-self: center;
+}
+.telao-topo .agora {
+  margin-left: auto;
+  text-align: right;
+  font-size: clamp(11px, 1vw, 14px);
+  color: var(--tinta-2);
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.telao-topo .agora .endereco {
+  font-size: clamp(14px, 1.5vw, 24px);
+  font-weight: 800;
+  color: var(--ameixa);
+  background: var(--amarelo);
+  border-radius: 999px;
+  padding: 5px 16px;
+}
+
+/* --- Faixa do prêmio (o topo do jogo) --- */
+
+.premio {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 36px);
+  background: var(--roxo);
+  border-radius: var(--raio-g);
+  padding: clamp(16px, 2vw, 28px) clamp(18px, 2.4vw, 34px);
+  box-shadow: 0 8px 0 var(--roxo-escuro);
+}
+.premio-trofeu {
+  width: clamp(80px, 9vw, 132px);
+  height: auto;
+  flex: none;
+}
+.premio-texto h2 {
+  font: 400 clamp(22px, 2.8vw, 40px) / 1 var(--display);
+  margin: 0;
+  color: var(--amarelo);
+}
+.premio-texto p {
+  margin: 6px 0 0;
+  color: var(--branco);
+  font-size: clamp(13px, 1.25vw, 19px);
+  max-width: 60ch;
+}
+.premio-lider {
+  text-align: right;
+  min-width: clamp(140px, 16vw, 260px);
+}
+.premio-lider span {
+  display: block;
+  font-size: clamp(10px, 0.95vw, 13px);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 253, 247, 0.78);
+}
+.premio-lider strong {
+  display: block;
+  font: 400 clamp(22px, 2.6vw, 40px) / 1.05 var(--display);
+  color: var(--branco);
+}
+.premio-lider em {
+  display: block;
+  font-style: normal;
+  font-size: clamp(13px, 1.3vw, 20px);
+  font-weight: 800;
+  color: var(--amarelo);
+}
+
+/* --- 1 e 2 da hierarquia: quanto veio, e o que está em jogo --- */
+
+.topo-jogo {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.85fr) 2fr;
+  gap: clamp(10px, 1.2vw, 18px);
+  align-items: stretch;
+}
+
+.hero-total {
+  background: var(--cartao);
+  border-radius: var(--raio-g);
+  padding: clamp(14px, 1.6vw, 26px) clamp(16px, 1.8vw, 30px);
+  box-shadow: var(--sombra);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.hero-total > span {
+  font-size: clamp(10px, 0.95vw, 14px);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+  font-weight: 700;
+}
+/* O número mais importante do painel. */
+.hero-total > strong {
+  font: 400 clamp(38px, 5vw, 86px) / 1 var(--display);
+  color: var(--rosa-escuro);
+}
+.hero-total > small {
+  font-size: clamp(11px, 1vw, 15px);
+  color: var(--tinta-2);
+  line-height: 1.3;
+}
+
+/* --- 4 da hierarquia: as outras métricas, numa faixa fina --- */
+
+.metricas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: clamp(8px, 1vw, 14px);
+}
+.metricas > div {
+  background: var(--cartao);
+  border-radius: var(--raio);
+  padding: clamp(9px, 1vw, 15px) clamp(13px, 1.4vw, 22px);
+  box-shadow: 0 4px 0 rgba(44, 0, 32, 0.16);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.metricas span {
+  font-size: clamp(10px, 0.9vw, 13px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tinta-3);
+  font-weight: 700;
+}
+.metricas strong {
+  font: 400 clamp(18px, 1.8vw, 28px) / 1 var(--display);
+  color: var(--ameixa);
+  white-space: nowrap;
+}
+
+/* --- A corrida: barras horizontais rumo aos 100 kg --- */
+
+.painel {
+  background: var(--cartao);
+  border-radius: var(--raio-g);
+  padding: clamp(14px, 1.8vw, 26px);
+  box-shadow: var(--sombra);
+}
+.painel-cabeca {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: clamp(12px, 1.6vw, 20px);
+}
+.painel-cabeca h2 {
+  font: 400 clamp(19px, 2.2vw, 32px) / 1 var(--display);
+  margin: 0;
+  color: var(--ameixa);
+}
+.painel-cabeca .nota {
+  font-size: clamp(11px, 1vw, 14px);
+  color: var(--tinta-3);
+}
+
+.corrida {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1vw, 14px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.corredor {
+  display: grid;
+  grid-template-columns: clamp(26px, 2.6vw, 46px) clamp(40px, 3.8vw, 62px) 1fr;
+  align-items: center;
+  gap: clamp(8px, 1.1vw, 16px);
+}
+.corredor .lugar {
+  font: 400 clamp(17px, 2vw, 30px) / 1 var(--display);
+  color: var(--tinta-3);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.corredor[data-lugar="1"] .lugar {
+  color: var(--rosa-escuro);
+}
+/* Moldura circular dos escudos.
+   As logos vêm com fundo transparente, mas nem todas são redondas — então
+   a arte entra no quadrado inscrito no círculo (~70% do diâmetro) para nada
+   ser cortado pelo recorte. O anel é de propósito, não sobra de fundo. */
+.escudo-atletica {
+  border-radius: 50%;
+  background: var(--branco);
+  object-fit: contain;
+  padding: 15%;
+  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.12);
+}
+
+.corredor .escudo {
+  width: clamp(40px, 3.8vw, 62px);
+  height: clamp(40px, 3.8vw, 62px);
+  border-radius: 50%;
+  background: var(--branco);
+  object-fit: contain;
+  padding: 15%;
+  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.12);
+}
+
+.pista {
+  position: relative;
+}
+.pista-rotulos {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+}
+/* Nome, chave e selo numa linha flexível: quando aperta, o selo desce
+   em vez de encostar na chave. */
+.pista-nome {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 3px 9px;
+  font-size: clamp(13px, 1.35vw, 21px);
+  font-weight: 800;
+  color: var(--ameixa);
+  line-height: 1.1;
+}
+.pista-nome .chave {
+  font-size: 0.66em;
+  font-weight: 700;
+  color: var(--tinta-3);
+}
+.pista-valor {
+  font: 400 clamp(17px, 2vw, 32px) / 1 var(--display);
+  color: var(--rosa-escuro);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* O percentual é apoio do número em kg, não concorre com ele. */
+.pista-valor i {
+  font-style: normal;
+  font-size: 0.72em;
+  color: var(--tinta-3);
+}
+.corredor[data-meta="true"] .pista-valor i {
+  color: var(--roxo);
+}
+.corredor[data-meta="true"] .pista-valor {
+  color: var(--roxo);
+}
+
+/* O trilho é recessivo; a barra é o único elemento saturado. */
+.trilho {
+  position: relative;
+  height: clamp(16px, 1.6vw, 26px);
+  background: var(--trilho);
+  border-radius: 6px;
+}
+.barra {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--rosa);
+  /* Ponta arredondada de 4px, base ancorada no zero. */
+  border-radius: 2px 6px 6px 2px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  min-width: 3px;
+}
+.corredor[data-meta="true"] .barra {
+  background: var(--roxo);
+}
+/* Excedente da meta: mesma cor, textura por cima, para ler "passou". */
+.barra-excedente {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--roxo) 0 6px,
+    rgba(255, 253, 247, 0.55) 6px 12px
+  );
+  border-radius: 2px 6px 6px 2px;
+  box-shadow: -2px 0 0 var(--cartao);
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Linha da meta em 100 kg — referência, não dado. */
+.linha-meta {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--tinta-3);
+}
+.selo-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--roxo);
+  color: var(--branco);
+  font: 800 clamp(9px, 0.85vw, 12px) var(--texto);
+  letter-spacing: 0.08em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* --- Tabela (leitura alternativa dos mesmos dados) --- */
+
+.tabela-dados {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: clamp(12px, 1.1vw, 15px);
+  font-variant-numeric: tabular-nums;
+}
+.tabela-dados caption {
+  text-align: left;
+  color: var(--tinta-3);
+  font-size: 12px;
+  padding-bottom: 10px;
+}
+.tabela-dados th,
+.tabela-dados td {
+  text-align: right;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--linha);
+}
+.tabela-dados th:first-child,
+.tabela-dados td:first-child {
+  text-align: left;
+}
+.tabela-dados th {
+  color: var(--tinta-3);
+  font-weight: 800;
+  font-size: 0.86em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.tabela-dados td {
+  color: var(--tinta);
+}
+
+details.ver-tabela {
+  margin-top: 14px;
+}
+details.ver-tabela > summary {
+  cursor: pointer;
+  color: var(--tinta-3);
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+}
+details.ver-tabela > summary::-webkit-details-marker {
+  display: none;
+}
+details.ver-tabela > summary::before {
+  content: "▸ ";
+}
+details.ver-tabela[open] > summary::before {
+  content: "▾ ";
+}
+details.ver-tabela > div {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+/* --- Dica de hover --- */
+
+.dica-hover {
+  position: fixed;
+  z-index: 40;
+  pointer-events: none;
+  background: var(--ameixa);
+  color: var(--branco);
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 10px 28px rgba(44, 0, 32, 0.4);
+  max-width: 260px;
+}
+.dica-hover strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+  color: var(--amarelo);
+}
+.dica-hover dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 2px 12px;
+}
+.dica-hover dt {
+  color: rgba(255, 253, 247, 0.7);
+}
+.dica-hover dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Utilidades --- */
+
+.vazio {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--branco);
+  font-weight: 600;
+}
+.rodape {
+  margin-top: auto;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--tinta-2);
+  font-weight: 600;
+}
+.rodape a {
+  color: var(--ameixa);
+  /* Alvo de toque confortável: o texto sozinho tinha 15px de altura. */
+  display: inline-block;
+  padding: 14px 18px;
+  min-height: 44px;
+}
+.centro {
+  text-align: center;
+}
+/* Títulos de tela ficam direto sobre o rosa: branco, tamanho grande. */
+.titulo {
+  font: 400 clamp(26px, 7vw, 34px) / 1.05 var(--display);
+  color: var(--branco);
+  margin: 0;
+  text-shadow: 0 4px 0 rgba(44, 0, 32, 0.22);
+}
+.subtitulo {
+  margin: 0;
+  color: var(--tinta);
+  font-size: 15px;
+  font-weight: 500;
+}
+.cartao .subtitulo {
+  color: var(--tinta-2);
+}
+.resumo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--tinta);
+  padding: 10px 14px;
+  background: var(--cartao-claro);
+  border-radius: var(--raio);
+}
+.resumo img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--branco);
+  object-fit: contain;
+  padding: 15%;
+  flex: none;
+  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.12);
+}
+.resumo strong {
+  color: var(--ameixa);
+}
+.previa-card {
+  width: 100%;
+  border-radius: var(--raio);
+  display: block;
+  box-shadow: 0 6px 0 rgba(44, 0, 32, 0.18);
+}
+
+.dialogo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(44, 0, 32, 0.78);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+.dialogo > div {
+  background: var(--cartao-claro);
+  color: var(--tinta);
+  border-radius: var(--raio-g);
+  padding: 24px;
+  max-width: 420px;
+  width: 100%;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.dialogo h2 {
+  font-family: var(--display);
+  font-weight: 400;
+  color: var(--rosa-escuro);
+  margin: 0 0 12px;
+}
+
+/* --- Painel em TV: cabe inteiro na tela, sem rolagem ---
+   A partir de 1100px de largura o telão vira uma coluna de altura fixa:
+   herói + prêmio em cima, a corrida ocupando toda a sobra, métricas no pé.
+   Nada rola. */
+
+@media (min-width: 1100px) {
+  .telao {
+    height: 100dvh;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    gap: clamp(10px, 1.1vw, 18px);
+    padding: clamp(12px, 1.3vw, 24px);
+    max-width: none;
+  }
+
+  .painel-corrida {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    /* Rede de segurança: a corrida nunca invade a faixa de métricas. */
+    overflow: hidden;
+  }
+  /* Grade de linhas iguais que dividem exatamente a altura disponível,
+     para qualquer número de atléticas. Com flex as linhas mantinham a
+     altura intrínseca e transbordavam. */
+  .painel-corrida .corrida {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-auto-rows: minmax(0, 1fr);
+    gap: clamp(4px, 0.6vh, 12px);
+  }
+  .corredor {
+    min-height: 0;
+  }
+  /* Escudo e barra também medem em vh: numa TV baixa eles encolhem junto. */
+  .corredor .escudo {
+    width: min(3.8vw, 5.8vh);
+    height: min(3.8vw, 5.8vh);
+  }
+  .trilho {
+    height: min(1.9vw, 3.1vh);
+  }
+
+  /* Sem interação numa TV: a tabela e o rodapé saem do caminho. */
+  .telao details.ver-tabela,
+  .telao > .rodape {
+    display: none;
+  }
+}
+
+/* Quando a TV é baixa (720p, ou janela curta), tudo aperta mais um pouco. */
+@media (min-width: 1100px) and (max-height: 820px) {
+  .premio-texto p {
+    display: none;
+  }
+  .painel-cabeca {
+    margin-bottom: 8px;
+  }
+  .hero-total > small {
+    display: none;
+  }
+}
+
+/* --- Painel em telas estreitas ---
+   O telão é feito para projetor, mas todo mundo vai abrir no celular também. */
+
+@media (max-width: 1099px) {
+  .topo-jogo {
+    grid-template-columns: 1fr;
+  }
+
+  .premio {
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+  }
+  .premio-trofeu {
+    width: 72px;
+  }
+  /* O líder passa a ocupar a linha inteira embaixo, em vez de espremer. */
+  .premio-lider {
+    grid-column: 1 / -1;
+    text-align: left;
+    min-width: 0;
+    border-top: 2px solid rgba(255, 253, 247, 0.3);
+    padding-top: 12px;
+  }
+  .premio-lider strong {
+    font-size: 28px;
+  }
+
+  .metricas {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Nome e valor deixam de brigar pela mesma linha. */
+  .pista-rotulos {
+    flex-wrap: wrap;
+    gap: 2px 10px;
+  }
+  .pista-valor {
+    font-size: 17px;
+  }
+  .corredor {
+    grid-template-columns: 26px 38px 1fr;
+    gap: 8px;
+  }
+  .corredor .escudo {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* Tela de pagamento em celular baixo (iPhone SE e afins): tudo encolhe
+   o suficiente para o botão de copiar o PIX ficar acima da dobra. O alvo
+   de toque de 44px é mantido — o que cede é o respiro e o tamanho do QR. */
+
+@media (max-height: 740px) {
+  .tela.tela-pagamento {
+    gap: 8px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  }
+  .tela-pagamento .voltar {
+    padding: 9px 14px;
+    font-size: 12.5px;
+  }
+  .tela-pagamento .premios[data-compacta="true"] {
+    padding: 10px;
+    gap: 7px;
+  }
+  .tela-pagamento .premios-grade {
+    gap: 6px;
+  }
+  .tela-pagamento .premio-item {
+    padding: 7px 10px;
+  }
+  .tela-pagamento .premios[data-compacta="true"] .premio-item img {
+    width: 44px;
+    height: 38px;
+  }
+  .tela-pagamento .premios[data-compacta="true"] .premio-linha {
+    grid-template-columns: 44px 1fr;
+  }
+  .tela-pagamento .premio-info strong {
+    font-size: 14.5px;
+  }
+  .tela-pagamento .cartao-valor {
+    padding: 12px;
+    gap: 9px;
+  }
+  .tela-pagamento .valores button {
+    padding: 10px 4px;
+  }
+  .tela-pagamento .pagar-qr {
+    padding: 11px;
+    gap: 12px;
+  }
+  .tela-pagamento .pagar-qr > img {
+    width: 104px;
+    height: 104px;
+  }
+  .tela-pagamento .pagar-resumo strong {
+    font-size: 26px;
+  }
+  .tela-pagamento .botao {
+    padding: 15px 18px;
+  }
+}
+
+/* Celular baixo: encolhe o cabeçalho da marca para o formulário caber melhor. */
+@media (max-height: 700px) {
+  .marca img {
+    width: 74px;
+    height: 74px;
+  }
+  .marca h1 {
+    font-size: 27px;
+  }
+  .marca p {
+    font-size: 13px;
+  }
+  .tela {
+    gap: 14px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 14px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
