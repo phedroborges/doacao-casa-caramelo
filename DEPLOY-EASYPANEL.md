@@ -18,10 +18,11 @@ Antes do primeiro deploy, o projeto precisa estar pronto:
 2. **Bucket de imagens.** A migration já cria o bucket `event-media` com as
    políticas de upload restritas a administradores.
 
-3. **Primeiro administrador.** Siga `supabase/bootstrap-admin.sql`: crie a conta
-   em *Authentication > Users* com **Auto Confirm User** ligado e rode o
-   `insert` daquele arquivo. Sem esse passo o painel `/admin` fica inacessível,
-   porque estar no Auth não basta — é preciso estar em `public.admin_users`.
+3. **Administrador.** O primeiro já está criado e testado. Para adicionar
+   outros, siga `supabase/bootstrap-admin.sql`: crie a conta em
+   *Authentication > Users* com **Auto Confirm User** ligado e rode o `insert`
+   daquele arquivo. Estar no Auth não basta — sem a linha em
+   `public.admin_users` o login é recusado.
 
 ## 2. Criar o serviço
 
