@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { buscarEventoCompletoPorId, buscarParticipante, criarDoacao, eventoEstaAberto } from "@/lib/db";
 import { gerarBrCode } from "@/lib/pix";
+import { digitosTelefone, telefoneValido } from "@/lib/telefone";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export async function POST(requisicao: Request) {
   const nome = String(corpo.nome ?? "").trim();
   const eventoId = String(corpo.eventoId ?? "").trim();
   const participanteId = corpo.participanteId ? String(corpo.participanteId).trim() : null;
+  const telefone = digitosTelefone(String(corpo.telefone ?? ""));
   const tipo = String(corpo.tipo ?? "");
   const quantidade = Number(corpo.quantidade);
   const respostasRecebidas = corpo.respostas && typeof corpo.respostas === "object" ? corpo.respostas : {};
@@ -27,6 +29,14 @@ export async function POST(requisicao: Request) {
 
   if (nome.length < 2 || nome.length > 60) {
     return NextResponse.json({ erro: "Informe seu nome." }, { status: 400 });
+  }
+  if (evento.pedirTelefone) {
+    if (!telefone && evento.telefoneObrigatorio) {
+      return NextResponse.json({ erro: "Informe seu telefone com DDD." }, { status: 400 });
+    }
+    if (telefone && !telefoneValido(telefone)) {
+      return NextResponse.json({ erro: "Informe um telefone válido com DDD." }, { status: 400 });
+    }
   }
   const participante = participanteId ? await buscarParticipante(participanteId) : null;
   if (
@@ -74,6 +84,7 @@ export async function POST(requisicao: Request) {
     eventoId: evento.id,
     participanteId: participante?.id ?? null,
     nome,
+    telefone: evento.pedirTelefone ? telefone : "",
     valor,
     pesoKg,
     respostas,

@@ -91,6 +91,8 @@ async function extrairEvento(
     participantePlural: valor(formulario, "participantePlural") || "participantes",
     rotuloNome: valor(formulario, "rotuloNome") || "Seu nome",
     placeholderNome: valor(formulario, "placeholderNome") || "Como te chamam?",
+    pedirTelefone: marcado(formulario, "pedirTelefone"),
+    telefoneObrigatorio: marcado(formulario, "telefoneObrigatorio"),
     metaKg: Math.max(0, numero(formulario, "metaKg", atual.metaKg)),
     reaisPorKg: Math.max(0.01, numero(formulario, "reaisPorKg", atual.reaisPorKg)),
     valorMinimo: Math.max(0.01, numero(formulario, "valorMinimo", atual.valorMinimo)),

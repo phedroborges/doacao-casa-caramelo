@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { adminAutenticado } from "@/lib/auth";
 import { buscarEventoCompletoPorId, listarDoacoesEvento } from "@/lib/db";
+import { formatarTelefone } from "@/lib/telefone";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function GET(_requisicao: Request, contexto: { params: Promise<{ id
   const participantes = new Map(evento.participantes.map((item) => [item.id, item.nome]));
   const doacoes = await listarDoacoesEvento(id);
   const colunas = [
-    "id", "nome", "participante", "valor", "pesoKg", "respostas",
+    "id", "nome", "telefone", "participante", "valor", "pesoKg", "respostas",
     "criadoEm", "confirmadoEm", "compartilhadoEm",
   ];
   const linhas = [
@@ -26,6 +27,7 @@ export async function GET(_requisicao: Request, contexto: { params: Promise<{ id
       [
         doacao.id,
         doacao.nome,
+        formatarTelefone(doacao.telefone),
         doacao.participanteId ? participantes.get(doacao.participanteId) : "",
         doacao.valor,
         doacao.pesoKg,

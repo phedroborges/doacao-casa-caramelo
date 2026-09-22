@@ -48,6 +48,8 @@ const CONFIGURACAO_PADRAO = {
   participantePlural: "atléticas",
   rotuloNome: "Seu nome",
   placeholderNome: "Como te chamam?",
+  pedirTelefone: true,
+  telefoneObrigatorio: true,
   metaKg: 100,
   reaisPorKg: 5,
   valorMinimo: 5,
@@ -104,6 +106,8 @@ function configuracaoDoEvento(evento: DadosEvento | Evento) {
     participantePlural: evento.participantePlural,
     rotuloNome: evento.rotuloNome,
     placeholderNome: evento.placeholderNome,
+    pedirTelefone: evento.pedirTelefone,
+    telefoneObrigatorio: evento.telefoneObrigatorio,
     metaKg: evento.metaKg,
     reaisPorKg: evento.reaisPorKg,
     valorMinimo: evento.valorMinimo,
@@ -207,6 +211,7 @@ function mapearDoacao(linha: Linha): Doacao {
     eventoId: texto(linha.event_id),
     participanteId: linha.participant_id ? texto(linha.participant_id) : null,
     nome: texto(linha.donor_name),
+    telefone: texto(linha.donor_phone),
     valor: numero(linha.amount),
     pesoKg: numero(linha.weight_kg),
     respostas: json<Record<string, string | boolean>>(linha.answers_json, {}),
@@ -514,6 +519,7 @@ export async function criarDoacao(dados: {
   eventoId: string;
   participanteId: string | null;
   nome: string;
+  telefone: string;
   valor: number;
   pesoKg: number;
   respostas: Record<string, string | boolean>;
@@ -525,7 +531,8 @@ export async function criarDoacao(dados: {
   const claimTokenHash = createHash("sha256").update(tokenConfirmacao).digest("hex");
   const { error } = await supabase.from("donations").insert({
     id, event_id: dados.eventoId, participant_id: dados.participanteId,
-    donor_name: dados.nome, amount: dados.valor, weight_kg: dados.pesoKg,
+    donor_name: dados.nome, donor_phone: dados.telefone,
+    amount: dados.valor, weight_kg: dados.pesoKg,
     answers_json: dados.respostas, claim_token_hash: claimTokenHash,
   });
   exigirSemErro(error, "Não foi possível registrar a doação");
@@ -533,7 +540,8 @@ export async function criarDoacao(dados: {
     tokenConfirmacao,
     doacao: {
       id, eventoId: dados.eventoId, participanteId: dados.participanteId,
-      nome: dados.nome, valor: dados.valor, pesoKg: dados.pesoKg,
+      nome: dados.nome, telefone: dados.telefone,
+      valor: dados.valor, pesoKg: dados.pesoKg,
       respostas: dados.respostas, criadoEm, confirmadoEm: null, compartilhadoEm: null,
     },
   };

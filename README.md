@@ -26,6 +26,7 @@ Em `/admin`, o responsável pode:
 - configurar a conta PIX, conversão em quilos e valores sugeridos;
 - cadastrar participantes como atléticas, empresas, equipes ou outra categoria;
 - enviar foto ou logo e definir meta específica por participante;
+- escolher se o formulário pede telefone com DDD e se ele é obrigatório;
 - adicionar campos extras de texto, seleção ou confirmação ao formulário;
 - cadastrar, editar, ordenar, desativar ou remover prêmios;
 - desativar completamente a premiação e/ou o compartilhamento;

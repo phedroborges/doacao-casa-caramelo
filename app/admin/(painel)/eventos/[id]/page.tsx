@@ -131,12 +131,14 @@ export default async function EditarEvento({
         <label className="admin-check"><input type="checkbox" name="pixValorEmbutido" defaultChecked={evento.pixValorEmbutido} /> Gerar o código PIX já com o valor escolhido</label>
 
         <hr />
-        <div className="admin-secao-titulo"><div><span className="admin-kicker">Formulário</span><h2>Nome e consentimento</h2></div></div>
+        <div className="admin-secao-titulo"><div><span className="admin-kicker">Formulário</span><h2>Nome, telefone e consentimento</h2></div></div>
         <div className="admin-grid dois">
           <label>Rótulo do nome<input name="rotuloNome" defaultValue={evento.rotuloNome} /></label>
           <label>Exemplo do campo<input name="placeholderNome" defaultValue={evento.placeholderNome} /></label>
           <label className="admin-coluna-inteira">Termo de dados<textarea name="termoDados" rows={4} defaultValue={evento.termoDados} /></label>
         </div>
+        <label className="admin-check"><input type="checkbox" name="pedirTelefone" defaultChecked={evento.pedirTelefone} /> Pedir telefone com DDD no formulário</label>
+        <label className="admin-check"><input type="checkbox" name="telefoneObrigatorio" defaultChecked={evento.telefoneObrigatorio} /> Exigir o telefone para concluir a doação</label>
 
         <hr />
         <div className="admin-secao-titulo"><div><span className="admin-kicker">Compartilhamento</span><h2>Story automático</h2></div></div>
@@ -220,7 +222,7 @@ export default async function EditarEvento({
       </section>
 
       <section id="formulario" className="admin-card admin-bloco">
-        <div className="admin-secao-titulo"><div><span className="admin-kicker">Formulário</span><h2>Campos extras</h2><p>Nome e participante já são campos nativos. Adicione somente o que variar neste evento.</p></div></div>
+        <div className="admin-secao-titulo"><div><span className="admin-kicker">Formulário</span><h2>Campos extras</h2><p>Nome, telefone e participante já são campos nativos. Adicione somente o que variar neste evento.</p></div></div>
         <div className="admin-lista-editavel">
           {evento.campos.map((campo) => (
             <article className="admin-item-editavel" key={campo.id}>

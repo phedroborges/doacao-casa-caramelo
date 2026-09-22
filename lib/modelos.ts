@@ -18,6 +18,8 @@ export type Evento = {
   participantePlural: string;
   rotuloNome: string;
   placeholderNome: string;
+  pedirTelefone: boolean;
+  telefoneObrigatorio: boolean;
   metaKg: number;
   reaisPorKg: number;
   valorMinimo: number;
@@ -99,6 +101,7 @@ export type Doacao = {
   eventoId: string;
   participanteId: string | null;
   nome: string;
+  telefone: string;
   valor: number;
   pesoKg: number;
   respostas: Record<string, string | boolean>;

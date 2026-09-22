@@ -7,6 +7,7 @@ import { TelaEspera } from "@/components/TelaEspera";
 import { TelaSucesso } from "@/components/TelaSucesso";
 import { TermoDados } from "@/components/TermoDados";
 import { Premios } from "@/components/Premios";
+import { digitosTelefone, formatarTelefone, telefoneValido } from "@/lib/telefone";
 
 type Etapa = "dados" | "pagamento" | "espera" | "sucesso";
 type Respostas = Record<string, string | boolean>;
@@ -70,6 +71,7 @@ function CampoExtra({
 export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
   const [etapa, setEtapa] = useState<Etapa>("dados");
   const [nome, setNome] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [participanteId, setParticipanteId] = useState("");
   const [aceite, setAceite] = useState(false);
   const [mostrarTermo, setMostrarTermo] = useState(false);
@@ -86,8 +88,12 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
     const resposta = respostas[campo.chave];
     return campo.tipo === "checkbox" ? resposta === true : String(resposta ?? "").trim().length > 0;
   });
+  const telefoneCompleto =
+    !evento.pedirTelefone ||
+    (telefone ? telefoneValido(telefone) : !evento.telefoneObrigatorio);
   const dadosCompletos =
     nome.trim().length >= 2 &&
+    telefoneCompleto &&
     (!evento.temParticipantes || Boolean(participante)) &&
     camposCompletos &&
     aceite;
@@ -101,6 +107,7 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
       body: JSON.stringify({
         eventoId: evento.id,
         nome: nome.trim(),
+        telefone,
         participanteId: participante?.id ?? null,
         tipo: "pix",
         quantidade,
@@ -144,6 +151,7 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
   function recomecar() {
     setEtapa("dados");
     setNome("");
+    setTelefone("");
     setParticipanteId("");
     setAceite(false);
     setRespostas({});
@@ -203,6 +211,28 @@ export function AplicativoDoacao({ evento }: { evento: EventoPublico }) {
               <label htmlFor="nome">{evento.rotuloNome}</label>
               <input id="nome" type="text" autoComplete="name" placeholder={evento.placeholderNome} value={nome} maxLength={80} onChange={(e) => setNome(e.target.value)} />
             </div>
+
+            {evento.pedirTelefone && (
+              <div className="campo">
+                <label htmlFor="telefone">
+                  Telefone com DDD{evento.telefoneObrigatorio ? "" : " (opcional)"}
+                </label>
+                <input
+                  id="telefone"
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="(00) 00000-0000"
+                  value={formatarTelefone(telefone)}
+                  onChange={(e) => setTelefone(digitosTelefone(e.target.value))}
+                />
+                {telefone && !telefoneValido(telefone) ? (
+                  <span className="erro">Número incompleto. Confira o DDD e os dígitos.</span>
+                ) : (
+                  <span className="dica">Usamos só para falar com você sobre a doação.</span>
+                )}
+              </div>
+            )}
 
             {evento.temParticipantes && (
               <div className="campo">
