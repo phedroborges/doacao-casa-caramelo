@@ -79,6 +79,34 @@ function Escudo({ linha, className = "escudo" }: { linha: LinhaRanking; classNam
   return <img className={className} src={linha.imagem} alt="" onLoad={medirFormato} />;
 }
 
+/* Aro de progresso, com o escudo no vão do meio. Chama-se aro, e não anel,
+   porque .anel já é o spinner da tela de espera do PIX — a colisão fazia o
+   telão herdar o giro infinito e a borda amarela dele.
+   O telão vive numa TV, visto a metros de distância: comparar comprimentos de
+   barras parecidas exige foco que ninguém tem do outro lado da sala. O arco
+   fechando é forma, não medida — lê-se antes do número. E o vão do meio já era
+   espaço morto, então é ele que carrega a marca de quem está correndo. */
+function Aro({ linha, lugar }: { linha: LinhaRanking; lugar: number }) {
+  const RAIO = 45;
+  const volta = 2 * Math.PI * RAIO;
+  /* O arco para na volta completa; quem passou da meta mostra isso no
+     percentual e no troféu, não dando mais uma volta. */
+  const preenchido = Math.min(100, linha.percentual);
+  return (
+    <div className="aro-vao">
+      <div className="aro">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle className="aro-trilho" cx="50" cy="50" r={RAIO} />
+          {linha.pesoKg > 0 && <circle className="aro-arco" cx="50" cy="50" r={RAIO} strokeDasharray={volta} strokeDashoffset={volta * (1 - preenchido / 100)} />}
+        </svg>
+        <Escudo linha={linha} className="escudo escudo-aro" />
+        <span className="lugar">{lugar}º</span>
+        {linha.bateuMeta && <span className="selo-meta" title="Meta batida">🏆</span>}
+      </div>
+    </div>
+  );
+}
+
 export function RankingEvento({ eventoId }: { eventoId: string }) {
   const [ranking, setRanking] = useState<Ranking | null>(null);
   const [offline, setOffline] = useState(false);
@@ -113,7 +141,6 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
 
   const lider = ranking.linhas[0];
   const temDisputa = Boolean(lider && ranking.totalKg > 0);
-  const topo = Math.max(1, ...ranking.linhas.flatMap((linha) => [linha.metaKg, linha.pesoKg]));
 
   const destaque = ranking.linhas.slice(0, LUGARES_EM_DESTAQUE);
   const restante = ranking.linhas.slice(LUGARES_EM_DESTAQUE);
@@ -180,29 +207,17 @@ export function RankingEvento({ eventoId }: { eventoId: string }) {
         <section className="painel painel-corrida">
           <div className="painel-cabeca">
             <h2>{restante.length > 0 ? `Top ${destaque.length} da corrida` : "A corrida até as metas"}</h2>
-            <span className="nota">A linha marca a meta de cada {ranking.evento.participanteSingular}. Listrado = excedente.</span>
+            <span className="nota">O anel fecha quando a {ranking.evento.participanteSingular} bate a meta.</span>
           </div>
           <ul className="corrida">
-            {destaque.map((linha, indice) => {
-              const larguraTotal = Math.min(100, (linha.pesoKg / topo) * 100);
-              const posicaoMeta = Math.min(100, (linha.metaKg / topo) * 100);
-              const larguraAteMeta = Math.min(larguraTotal, posicaoMeta);
-              const larguraExcedente = Math.max(0, larguraTotal - posicaoMeta);
-              return (
-                <li key={linha.participanteId} className="corredor" data-lugar={indice + 1} data-meta={linha.bateuMeta} onMouseMove={(e) => setDica({ linha, x: e.clientX, y: e.clientY })} onMouseLeave={() => setDica(null)}>
-                  <span className="lugar">{indice + 1}º</span>
-                  <Escudo linha={linha} />
-                  <div className="pista">
-                    <div className="pista-rotulos"><span className="pista-nome">{linha.nome}{linha.grupo && <span className="chave">{linha.grupo}</span>}{linha.bateuMeta && <span className="selo-meta">🏆 META BATIDA</span>}</span><span className="pista-valor">{kg(linha.pesoKg)} <i>· {linha.percentual}%</i></span></div>
-                    <div className="trilho" role="img" aria-label={`${linha.nome}: ${kg(linha.pesoKg)}, ${linha.percentual}% da meta de ${linha.metaKg} kg`}>
-                      {linha.pesoKg > 0 && <div className="barra" style={{ width: `${larguraAteMeta}%` }} />}
-                      {larguraExcedente > 0 && <div className="barra-excedente" style={{ left: `${posicaoMeta}%`, width: `${larguraExcedente}%` }} />}
-                      {posicaoMeta < 100 && <div className="linha-meta" style={{ left: `${posicaoMeta}%` }} />}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
+            {destaque.map((linha, indice) => (
+              <li key={linha.participanteId} className="corredor" data-lugar={indice + 1} data-meta={linha.bateuMeta} role="img" aria-label={`${indice + 1}º lugar, ${linha.nome}: ${kg(linha.pesoKg)}, ${linha.percentual}% da meta de ${linha.metaKg} kg`} onMouseMove={(e) => setDica({ linha, x: e.clientX, y: e.clientY })} onMouseLeave={() => setDica(null)}>
+                <Aro linha={linha} lugar={indice + 1} />
+                <span className="corredor-nome">{linha.nome}</span>
+                <strong className="corredor-valor">{kg(linha.pesoKg)}</strong>
+                <span className="corredor-percentual">{linha.percentual}% da meta{linha.grupo && <i>{linha.grupo}</i>}</span>
+              </li>
+            ))}
           </ul>
         </section>
       )}

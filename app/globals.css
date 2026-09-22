@@ -1295,7 +1295,7 @@ body {
   filter: drop-shadow(0 5px 0 rgba(44, 0, 32, 0.2));
 }
 .telao-topo h1 {
-  font: 400 clamp(26px, 3.6vw, 52px) / 0.95 var(--display);
+  font: 400 clamp(28px, 4vw, 66px) / 0.95 var(--display);
   color: var(--branco);
   margin: 0;
   text-shadow: 0 5px 0 rgba(44, 0, 32, 0.22);
@@ -1303,7 +1303,7 @@ body {
 .telao-topo p {
   margin: 4px 0 0;
   color: var(--tinta);
-  font-size: clamp(12px, 1.1vw, 16px);
+  font-size: clamp(13px, 1.25vw, 21px);
   font-weight: 600;
 }
 .telao-topo .selo-laf {
@@ -1376,7 +1376,7 @@ body {
   gap: clamp(16px, 2.4vw, 36px);
   background: var(--roxo);
   border-radius: var(--raio-g);
-  padding: clamp(16px, 2vw, 28px) clamp(18px, 2.4vw, 34px);
+  padding: clamp(16px, 1.6vw, 20px) clamp(18px, 2.4vw, 34px);
   box-shadow: 0 8px 0 var(--roxo-escuro);
 }
 .premio-trofeu {
@@ -1385,14 +1385,14 @@ body {
   flex: none;
 }
 .premio-texto h2 {
-  font: 400 clamp(22px, 2.8vw, 40px) / 1 var(--display);
+  font: 400 clamp(24px, 3.1vw, 50px) / 1 var(--display);
   margin: 0;
   color: var(--amarelo);
 }
 .premio-texto p {
   margin: 6px 0 0;
   color: var(--branco);
-  font-size: clamp(13px, 1.25vw, 19px);
+  font-size: clamp(14px, 1.4vw, 24px);
   max-width: 60ch;
 }
 .premio-lider {
@@ -1401,20 +1401,20 @@ body {
 }
 .premio-lider span {
   display: block;
-  font-size: clamp(10px, 0.95vw, 13px);
+  font-size: clamp(11px, 1.1vw, 17px);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgba(255, 253, 247, 0.78);
 }
 .premio-lider strong {
   display: block;
-  font: 400 clamp(22px, 2.6vw, 40px) / 1.05 var(--display);
+  font: 400 clamp(24px, 3vw, 50px) / 1.05 var(--display);
   color: var(--branco);
 }
 .premio-lider em {
   display: block;
   font-style: normal;
-  font-size: clamp(13px, 1.3vw, 20px);
+  font-size: clamp(15px, 1.5vw, 26px);
   font-weight: 800;
   color: var(--amarelo);
 }
@@ -1431,7 +1431,7 @@ body {
 .hero-total {
   background: var(--cartao);
   border-radius: var(--raio-g);
-  padding: clamp(14px, 1.6vw, 26px) clamp(16px, 1.8vw, 30px);
+  padding: clamp(14px, 1.4vw, 18px) clamp(16px, 1.8vw, 30px);
   box-shadow: var(--sombra);
   display: flex;
   align-items: center;
@@ -1445,7 +1445,7 @@ body {
   min-width: 0;
 }
 .hero-total-texto > span {
-  font-size: clamp(10px, 0.95vw, 14px);
+  font-size: clamp(11px, 1.1vw, 18px);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--tinta-3);
@@ -1453,11 +1453,11 @@ body {
 }
 /* O número mais importante do painel. */
 .hero-total-texto > strong {
-  font: 400 clamp(38px, 5vw, 86px) / 1 var(--display);
+  font: 400 clamp(40px, 5.6vw, 108px) / 1 var(--display);
   color: var(--rosa-escuro);
 }
 .hero-total-texto > small {
-  font-size: clamp(11px, 1vw, 15px);
+  font-size: clamp(12px, 1.2vw, 20px);
   color: var(--tinta-2);
   line-height: 1.3;
 }
@@ -1507,19 +1507,19 @@ body {
   gap: 10px;
 }
 .metricas span {
-  font-size: clamp(10px, 0.9vw, 13px);
+  font-size: clamp(11px, 1.05vw, 17px);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--tinta-3);
   font-weight: 700;
 }
 .metricas strong {
-  font: 400 clamp(18px, 1.8vw, 28px) / 1 var(--display);
+  font: 400 clamp(22px, 2.3vw, 40px) / 1 var(--display);
   color: var(--ameixa);
   white-space: nowrap;
 }
 
-/* --- A corrida: barras horizontais rumo aos 100 kg --- */
+/* --- A corrida: um bloco por participante, com anel de progresso --- */
 
 .painel {
   background: var(--cartao);
@@ -1536,186 +1536,198 @@ body {
   margin-bottom: clamp(12px, 1.6vw, 20px);
 }
 .painel-cabeca h2 {
-  font: 400 clamp(19px, 2.2vw, 32px) / 1 var(--display);
+  font: 400 clamp(21px, 2.5vw, 40px) / 1 var(--display);
   margin: 0;
   color: var(--ameixa);
 }
 .painel-cabeca .nota {
-  font-size: clamp(11px, 1vw, 14px);
+  font-size: clamp(12px, 1.1vw, 18px);
   color: var(--tinta-3);
 }
 
+/* O telão vive numa TV, visto a metros de distância. Barras horizontais
+   obrigavam a comparar comprimentos parecidos de longe — trabalho de foco que
+   ninguém faz do outro lado da sala. Cada participante ganha o próprio bloco,
+   e o anel fechando é forma, não medida: lê-se antes de qualquer número. */
 .corrida {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(8px, 1vw, 14px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: clamp(10px, 1.2vw, 20px);
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .corredor {
-  display: grid;
-  /* A coluna do escudo é dimensionada pela placa deitada dos patrocinadores;
-     o escudo redondo das atléticas fica centrado nela. */
-  grid-template-columns: clamp(26px, 2.6vw, 46px) clamp(64px, 6.2vw, 104px) 1fr;
+  /* Medida do aro no celular, onde o card cresce com o conteúdo. Na TV quem
+     manda é a sobra da faixa — ver a media query de 1100px. */
+  --aro: 132px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: clamp(8px, 1.1vw, 16px);
+  justify-content: center;
+  gap: clamp(3px, 0.4vw, 6px);
+  min-width: 0;
+  padding: clamp(6px, 0.7vw, 12px) clamp(6px, 0.7vw, 12px);
+  border-radius: var(--raio);
+  background: var(--trilho);
+  box-shadow: 0 4px 0 rgba(44, 0, 32, 0.1);
 }
-.corredor .lugar {
-  font: 400 clamp(17px, 2vw, 30px) / 1 var(--display);
-  color: var(--tinta-3);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
+/* Nada de encolher na marra: o nome já apareceu com 10px de altura, escondido
+   atrás do número, quando o conteúdo passou da faixa. */
+.corredor > * {
+  flex: none;
 }
-.corredor[data-lugar="1"] .lugar {
-  color: var(--rosa-escuro);
-}
-/* Moldura circular dos escudos.
-   As logos vêm com fundo transparente, mas nem todas são redondas — então
-   a arte entra no quadrado inscrito no círculo (~70% do diâmetro) para nada
-   ser cortado pelo recorte. O anel é de propósito, não sobra de fundo. */
-.escudo-atletica {
-  border-radius: 50%;
+/* A líder não precisa de outra cor — precisa de moldura. Cor viraria disputa
+   com o anel, que é quem carrega o dado. */
+.corredor[data-lugar="1"] {
   background: var(--branco);
-  object-fit: contain;
-  padding: 15%;
-  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.12);
+  box-shadow: 0 0 0 3px var(--rosa), 0 6px 0 rgba(44, 0, 32, 0.14);
 }
 
-/* Respiro entre a arte e a borda do escudo. Em px de propósito: padding em
-   porcentagem se mede pela largura do CONTÊINER, não da própria imagem, e
-   dentro de um card largo isso engolia a marca inteira. */
-.corredor .escudo {
-  width: clamp(40px, 3.8vw, 62px);
-  height: clamp(40px, 3.8vw, 62px);
-  border-radius: 50%;
-  background: var(--branco);
-  object-fit: contain;
-  padding: clamp(5px, 0.55vw, 9px);
-  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.12);
-  justify-self: center;
-}
-
-/* Assinatura horizontal de patrocinador (marcada no onLoad pela proporção do
-   arquivo): o círculo deixaria a marca do tamanho de um fiapo, então ela ganha
-   uma placa deitada, mais larga que alta, alinhada pela mesma coluna. */
-.escudo[data-formato="largo"] {
-  width: clamp(64px, 6.2vw, 104px);
-  border-radius: 12px;
-  padding: clamp(4px, 0.45vw, 7px) clamp(6px, 0.6vw, 10px);
-  justify-self: center;
-}
-
-/* Participante sem logo (patrocinadores, loja): a inicial ocupa o lugar do
-   escudo, com a mesma medida, para a coluna não desalinhar no telão. */
-.escudo-vazio {
+.aro-vao {
+  width: 100%;
   display: grid;
   place-items: center;
-  font: 400 clamp(18px, 1.8vw, 30px) / 1 var(--display);
+}
+.aro {
+  position: relative;
+  width: var(--aro);
+  height: var(--aro);
+  /* Sem isto o tamanho intrínseco do escudo vira piso de largura do aro, e
+     uma logo grande estoura o bloco por cima do número. */
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  display: grid;
+  place-items: center;
+}
+.aro svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* O arco começa às 12h, como se lê um relógio. */
+  transform: rotate(-90deg);
+}
+.aro circle {
+  fill: none;
+  stroke-width: 10;
+}
+.aro-trilho {
+  stroke: rgba(44, 0, 32, 0.1);
+}
+.aro-arco {
+  stroke: var(--rosa);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.corredor[data-meta="true"] .aro-arco {
+  stroke: var(--roxo);
+}
+
+/* O escudo ocupa o vão do meio, que já era espaço morto. Em % do anel para
+   acompanhar a TV: o quadrado de 66% cabe inteiro no círculo interno de 80%,
+   então nenhuma arte encosta no arco. */
+.escudo-aro {
+  /* Fora do fluxo, como o svg: quem manda na medida é o aro, nunca o arquivo. */
+  position: absolute;
+  width: 66%;
+  height: 66%;
+  border-radius: 50%;
+  background: var(--branco);
+  object-fit: contain;
+  padding: 4%;
+  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.12);
+}
+/* Assinatura horizontal de patrocinador: num círculo viraria fiapo, então ela
+   ganha placa deitada. 68 × 38 é o maior retângulo que ainda cabe no vão. */
+.escudo-aro[data-formato="largo"] {
+  width: 68%;
+  height: 38%;
+  border-radius: 12%;
+  padding: 2% 4%;
+}
+.corredor .escudo-vazio {
+  display: grid;
+  place-items: center;
+  font: 400 clamp(26px, 3vw, 52px) / 1 var(--display);
   color: var(--rosa-escuro);
   padding: 0;
 }
 
-.pista {
-  position: relative;
-}
-.pista-rotulos {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 5px;
-}
-/* Nome, chave e selo numa linha flexível: quando aperta, o selo desce
-   em vez de encostar na chave. */
-.pista-nome {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 3px 9px;
-  font-size: clamp(13px, 1.35vw, 21px);
+.corredor-nome {
+  font-size: clamp(14px, 1.5vw, 26px);
   font-weight: 800;
   color: var(--ameixa);
   line-height: 1.1;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.pista-nome .chave {
-  font-size: 0.66em;
-  font-weight: 700;
-  color: var(--tinta-3);
-}
-.pista-valor {
-  font: 400 clamp(17px, 2vw, 32px) / 1 var(--display);
+/* O número que a TV precisa entregar de longe. */
+.corredor-valor {
+  font: 400 clamp(24px, 2.9vw, 50px) / 1 var(--display);
   color: var(--rosa-escuro);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-/* O percentual é apoio do número em kg, não concorre com ele. */
-.pista-valor i {
-  font-style: normal;
-  font-size: 0.72em;
+.corredor[data-meta="true"] .corredor-valor {
+  color: var(--roxo);
+}
+.corredor-percentual {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-size: clamp(11px, 1.05vw, 17px);
+  font-weight: 700;
   color: var(--tinta-3);
+  text-align: center;
 }
-.corredor[data-meta="true"] .pista-valor i {
-  color: var(--roxo);
-}
-.corredor[data-meta="true"] .pista-valor {
-  color: var(--roxo);
+/* A chave é etiqueta de origem, não dado da corrida: anda junto do percentual,
+   em corpo menor, para não competir com o nome. */
+.corredor-percentual i {
+  font-style: normal;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--tinta-3);
+  opacity: 0.75;
+  white-space: nowrap;
 }
 
-/* O trilho é recessivo; a barra é o único elemento saturado. */
-.trilho {
-  position: relative;
-  height: clamp(16px, 1.6vw, 26px);
-  background: var(--trilho);
-  border-radius: 6px;
-}
-.barra {
-  position: absolute;
-  inset: 0 auto 0 0;
-  background: var(--rosa);
-  /* Ponta arredondada de 4px, base ancorada no zero. */
-  border-radius: 2px 6px 6px 2px;
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  min-width: 3px;
-}
-.corredor[data-meta="true"] .barra {
-  background: var(--roxo);
-}
-/* Excedente da meta: mesma cor, textura por cima, para ler "passou". */
-.barra-excedente {
+/* Colocação e troféu encostam no aro em vez de ocuparem uma faixa própria:
+   a linha que eles gastavam era justamente a que faltava para o card caber. */
+.aro .lugar,
+.aro .selo-meta {
   position: absolute;
   top: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    135deg,
-    var(--roxo) 0 6px,
-    rgba(255, 253, 247, 0.55) 6px 12px
-  );
-  border-radius: 2px 6px 6px 2px;
-  box-shadow: -2px 0 0 var(--cartao);
-  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Linha da meta em 100 kg — referência, não dado. */
-.linha-meta {
-  position: absolute;
-  top: -4px;
-  bottom: -4px;
-  width: 2px;
-  background: var(--tinta-3);
-}
-.selo-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--roxo);
-  color: var(--branco);
-  font: 800 clamp(9px, 0.85vw, 12px) var(--texto);
-  letter-spacing: 0.08em;
-  padding: 3px 9px;
+  display: grid;
+  place-items: center;
+  min-width: 34%;
+  height: 34%;
   border-radius: 999px;
-  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.aro .lugar {
+  left: 0;
+  padding: 0 5%;
+  background: var(--cartao);
+  box-shadow: 0 0 0 2px rgba(44, 0, 32, 0.1);
+  font: 400 clamp(15px, 1.6vw, 27px) / 1 var(--display);
+  color: var(--tinta-2);
+}
+.corredor[data-lugar="1"] .aro .lugar {
+  background: var(--rosa);
+  color: var(--branco);
+  box-shadow: none;
+}
+.aro .selo-meta {
+  right: 0;
+  background: var(--roxo);
+  font-size: clamp(13px, 1.3vw, 22px);
+  line-height: 1;
 }
 
 /* --- O fundo da tabela: quem não entrou no top 5 ---
@@ -1730,11 +1742,11 @@ body {
 }
 
 .pelotao {
-  padding: clamp(10px, 1.1vw, 18px) clamp(12px, 1.4vw, 22px);
+  padding: clamp(10px, 0.9vw, 13px) clamp(12px, 1.4vw, 22px);
   min-width: 0;
 }
 .pelotao h3 {
-  font-size: clamp(10px, 0.9vw, 13px);
+  font-size: clamp(11px, 1vw, 16px);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--tinta-3);
@@ -1757,7 +1769,7 @@ body {
   min-width: 0;
 }
 .pelotao .lugar {
-  font: 400 clamp(12px, 1.1vw, 17px) / 1 var(--display);
+  font: 400 clamp(13px, 1.25vw, 22px) / 1 var(--display);
   color: var(--tinta-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1778,7 +1790,7 @@ body {
   padding: 2px 4px;
 }
 .pelotao-nome {
-  font-size: clamp(11px, 1.05vw, 16px);
+  font-size: clamp(12px, 1.25vw, 21px);
   font-weight: 700;
   color: var(--ameixa);
   overflow: hidden;
@@ -1786,7 +1798,7 @@ body {
   white-space: nowrap;
 }
 .pelotao-valor {
-  font: 400 clamp(12px, 1.15vw, 19px) / 1 var(--display);
+  font: 400 clamp(14px, 1.45vw, 26px) / 1 var(--display);
   color: var(--rosa-escuro);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -1799,7 +1811,7 @@ body {
   border-radius: var(--raio-g);
   box-shadow: var(--sombra);
   border: 2px solid rgba(44, 0, 32, 0.16);
-  padding: clamp(10px, 1.1vw, 18px) clamp(12px, 1.4vw, 22px);
+  padding: clamp(10px, 0.9vw, 13px) clamp(12px, 1.4vw, 22px);
   display: flex;
   flex-direction: column;
   gap: clamp(6px, 0.8vw, 11px);
@@ -1807,7 +1819,7 @@ body {
   min-width: 0;
 }
 .rebaixamento-faixa {
-  font-size: clamp(10px, 0.9vw, 13px);
+  font-size: clamp(11px, 1vw, 16px);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   font-weight: 800;
@@ -1845,7 +1857,7 @@ body {
 }
 .rebaixamento-texto strong {
   display: block;
-  font-size: clamp(13px, 1.3vw, 21px);
+  font-size: clamp(15px, 1.5vw, 27px);
   font-weight: 800;
   color: var(--ameixa);
   line-height: 1.1;
@@ -1855,7 +1867,7 @@ body {
 }
 .rebaixamento-texto em {
   display: block;
-  font: 400 clamp(15px, 1.7vw, 27px) / 1.1 var(--display);
+  font: 400 clamp(17px, 1.9vw, 34px) / 1.1 var(--display);
   font-style: normal;
   color: var(--tinta-2);
   font-variant-numeric: tabular-nums;
@@ -1867,7 +1879,7 @@ body {
 }
 .rebaixamento-texto small {
   display: block;
-  font-size: clamp(10px, 0.95vw, 14px);
+  font-size: clamp(11px, 1.1vw, 18px);
   color: var(--tinta-3);
   font-weight: 600;
   line-height: 1.3;
@@ -2078,7 +2090,7 @@ details.ver-tabela > div {
     display: grid;
     /* topo · jogo · corrida (ocupa a sobra) · fundo da tabela · métricas */
     grid-template-rows: auto auto minmax(0, 1fr) auto auto;
-    gap: clamp(10px, 1.1vw, 18px);
+    gap: clamp(10px, 1vw, 14px);
     padding: clamp(12px, 1.3vw, 24px);
     max-width: none;
   }
@@ -2090,34 +2102,35 @@ details.ver-tabela > div {
     /* Rede de segurança: a corrida nunca invade a faixa de métricas. */
     overflow: hidden;
   }
-  /* Grade de linhas iguais que dividem exatamente a altura disponível,
-     para qualquer número de atléticas. Com flex as linhas mantinham a
-     altura intrínseca e transbordavam. */
+  /* Os blocos dividem a largura em partes iguais e esticam na altura que
+     sobrou. Uma linha só: numa TV, cinco blocos lado a lado se comparam de
+     relance, coisa que cinco linhas empilhadas nunca permitiram. */
   .painel-corrida .corrida {
     flex: 1;
     min-height: 0;
     display: grid;
-    /* Piso em min-content: numa TV baixa as linhas param de encolher em vez de
-       se sobreporem — nome, escudo e barra nunca se montam um no outro. */
-    grid-auto-rows: minmax(min-content, 1fr);
-    gap: clamp(4px, 0.6vh, 12px);
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-auto-rows: minmax(0, 1fr);
+    gap: clamp(8px, 1vw, 18px);
   }
   .corredor {
     min-height: 0;
   }
-  /* Escudo e barra também medem em vh: numa TV baixa eles encolhem junto. */
-  .corredor {
-    grid-template-columns: clamp(26px, 2.6vw, 46px) min(6.2vw, 9.4vh) 1fr;
+  /* O anel mede pelos dois eixos: numa TV baixa ele encolhe pela altura antes
+     de espremer o nome e o número contra as bordas do bloco. */
+  /* O aro toma a altura que sobrou depois de nome, número e percentual, e o
+     aspect-ratio devolve a largura. Assim ele acompanha qualquer TV sem que
+     ninguém precise adivinhar um vh que só serve para uma resolução. */
+  .corredor > .aro-vao {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
   }
-  .corredor .escudo {
-    width: min(3.8vw, 5.8vh);
-    height: min(3.8vw, 5.8vh);
-  }
-  .corredor .escudo[data-formato="largo"] {
-    width: min(6.2vw, 9.4vh);
-  }
-  .trilho {
-    height: min(1.9vw, 3.1vh);
+  .aro {
+    width: auto;
+    height: 100%;
+    aspect-ratio: 1;
+    max-width: 100%;
   }
 
   /* Sem interação numa TV: a tabela e o rodapé saem do caminho. */
@@ -2127,10 +2140,11 @@ details.ver-tabela > div {
   }
 }
 
-/* Quando a TV é baixa (720p, ou janela curta), tudo aperta mais um pouco.
+/* Quando a TV não é 1080p cheia (900p, 720p, ou janela curta), tudo aperta
+   mais um pouco.
    A corrida é a parte que não pode encolher, então quem cede é o topo (números
    grandes de enfeite) e o fundo da tabela. */
-@media (min-width: 1100px) and (max-height: 820px) {
+@media (min-width: 1100px) and (max-height: 1000px) {
   /* Respiro entre as faixas é a primeira coisa a ceder: 4 vãos × 6px pagam
      a barra da 5ª colocada. */
   .telao {
@@ -2179,17 +2193,14 @@ details.ver-tabela > div {
     padding: 10px clamp(12px, 1.4vw, 20px);
   }
   .corredor {
-    grid-template-columns: clamp(24px, 2.2vw, 38px) min(5.2vw, 7.4vh) 1fr;
+    padding: 8px 6px;
+    gap: 2px;
   }
-  .corredor .escudo {
-    width: min(3.3vw, 4.8vh);
-    height: min(3.3vw, 4.8vh);
+  .corredor-valor {
+    font-size: clamp(20px, 2.4vw, 40px);
   }
-  .corredor .escudo[data-formato="largo"] {
-    width: min(5.2vw, 7.4vh);
-  }
-  .trilho {
-    height: min(1.6vw, 2.5vh);
+  .corredor-nome {
+    font-size: clamp(13px, 1.3vw, 22px);
   }
 
   /* O fundo da tabela vira uma tarja fina: ele informa, não protagoniza. */
@@ -2256,24 +2267,13 @@ details.ver-tabela > div {
     gap: 1px;
   }
 
-  /* Nome e valor deixam de brigar pela mesma linha. */
-  .pista-rotulos {
-    flex-wrap: wrap;
-    gap: 2px 10px;
-  }
-  .pista-valor {
-    font-size: 17px;
+  /* Duas colunas de blocos: cinco lado a lado viraria selo de figurinha. */
+  .corrida {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
   .corredor {
-    grid-template-columns: 26px 58px 1fr;
-    gap: 8px;
-  }
-  .corredor .escudo {
-    width: 36px;
-    height: 36px;
-  }
-  .corredor .escudo[data-formato="largo"] {
-    width: 58px;
+    --aro: 108px;
   }
 
   /* No celular o fundo da tabela empilha: pelotão e depois a lanterna. */
