@@ -1736,7 +1736,7 @@ body {
 
 .fundo-tabela {
   display: grid;
-  grid-template-columns: 1fr minmax(240px, 0.46fr);
+  grid-template-columns: 1fr minmax(240px, 0.34fr);
   gap: clamp(8px, 1vw, 14px);
   align-items: stretch;
 }
@@ -1758,12 +1758,12 @@ body {
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(clamp(240px, 18vw, 300px), 1fr));
   gap: clamp(4px, 0.6vw, 9px) clamp(10px, 1.4vw, 22px);
 }
 .pelotao li {
   display: grid;
-  grid-template-columns: auto clamp(30px, 2.6vw, 42px) 1fr auto;
+  grid-template-columns: clamp(24px, 2.2vw, 38px) clamp(30px, 2.6vw, 42px) 1fr auto;
   align-items: center;
   gap: clamp(5px, 0.7vw, 10px);
   min-width: 0;
@@ -1772,6 +1772,7 @@ body {
   font: 400 clamp(13px, 1.25vw, 22px) / 1 var(--display);
   color: var(--tinta-3);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 /* Escudo miniatura: mesma lógica de moldura da corrida, em escala de lista. */
 .escudo-mini {
