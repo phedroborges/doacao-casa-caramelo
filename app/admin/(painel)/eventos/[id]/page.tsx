@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BotaoExcluir } from "@/app/admin/BotaoExcluir";
-import { buscarEventoCompletoPorId, contarDoacoesEvento } from "@/lib/db";
+import { buscarEventoCompletoPorId, listarDoacoesPainel, resumoDoacoesEvento } from "@/lib/db";
+import { formatarTelefone } from "@/lib/telefone";
 import {
   atualizarCampoAction,
   atualizarEventoAction,
@@ -31,6 +32,20 @@ const dataFormulario = (data: string) => {
   return emSaoPaulo.replace(" ", "T");
 };
 
+const POR_PAGINA = 50;
+
+const reais = (valor: number) =>
+  valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+const quando = (data: string, fuso: string) =>
+  new Date(data).toLocaleString("pt-BR", {
+    timeZone: fuso,
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
 function ImagemAtual({ src, alt }: { src: string; alt: string }) {
   if (!src) return <span className="admin-sem-imagem">Sem imagem</span>;
   // eslint-disable-next-line @next/next/no-img-element
@@ -42,13 +57,23 @@ export default async function EditarEvento({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ salvo?: string }>;
+  searchParams: Promise<{ salvo?: string; busca?: string; pagina?: string }>;
 }) {
   const { id } = await params;
-  const { salvo } = await searchParams;
+  const { salvo, busca = "", pagina } = await searchParams;
   const evento = await buscarEventoCompletoPorId(id);
   if (!evento) notFound();
-  const doacoes = await contarDoacoesEvento(evento.id);
+  const paginaAtual = Math.max(1, Number(pagina) || 1);
+  const [resumo, listagem] = await Promise.all([
+    resumoDoacoesEvento(evento.id),
+    listarDoacoesPainel(evento.id, { busca, pagina: paginaAtual, porPagina: POR_PAGINA }),
+  ]);
+  const doacoes = resumo.total;
+  const naoConfirmadas = resumo.total - resumo.confirmadas;
+  const nomeParticipante = new Map(evento.participantes.map((item) => [item.id, item.nome]));
+  const ultimaPagina = Math.max(1, Math.ceil(listagem.total / POR_PAGINA));
+  const enderecoPagina = (numero: number) =>
+    `?${new URLSearchParams({ ...(busca ? { busca } : {}), ...(numero > 1 ? { pagina: String(numero) } : {}) })}`;
 
   return (
     <div className="admin-pagina admin-editor">
@@ -57,7 +82,7 @@ export default async function EditarEvento({
           <Link href="/admin/eventos" className="admin-voltar">← Todos os eventos</Link>
           <span className="admin-kicker">Editando evento</span>
           <h1>{evento.nome}</h1>
-          <p>{doacoes} doações confirmadas neste evento.</p>
+          <p>{resumo.confirmadas} doações confirmadas{naoConfirmadas > 0 && ` · ${naoConfirmadas} não confirmadas`}.</p>
         </div>
         <div className="admin-acoes">
           <Link className="admin-botao" href={`/evento/${evento.slug}`} target="_blank">
@@ -290,6 +315,72 @@ export default async function EditarEvento({
             <button className="admin-botao primario" type="submit">Adicionar</button>
           </form>
         </details>
+      </section>
+
+      <section id="doacoes" className="admin-card admin-bloco">
+        <div className="admin-secao-titulo">
+          <div>
+            <span className="admin-kicker">Registro</span>
+            <h2>Doações recebidas</h2>
+            <p>
+              {resumo.total} no total · {resumo.confirmadas} confirmadas
+              {naoConfirmadas > 0 && ` · ${naoConfirmadas} abandonadas antes de confirmar o PIX`}.
+            </p>
+          </div>
+          <a className="admin-botao" href={`/api/admin/eventos/${evento.id}/exportar`}>Exportar CSV</a>
+        </div>
+
+        <form className="admin-busca" method="get">
+          <input type="search" name="busca" defaultValue={busca} placeholder="Buscar por nome ou telefone" aria-label="Buscar doação por nome ou telefone" />
+          <button className="admin-botao primario" type="submit">Buscar</button>
+          {busca && <a className="admin-botao" href="?">Limpar</a>}
+        </form>
+
+        {listagem.doacoes.length === 0 ? (
+          <p className="admin-vazio">{busca ? `Nenhuma doação encontrada para “${busca}”.` : "Ainda não há doações neste evento."}</p>
+        ) : (
+          <>
+            <div className="admin-tabela-rolagem">
+              <table className="admin-tabela">
+                <thead>
+                  <tr>
+                    <th scope="col">Quando</th>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Telefone</th>
+                    <th scope="col">{evento.participanteSingular}</th>
+                    <th scope="col">Valor</th>
+                    <th scope="col">Peso</th>
+                    <th scope="col">Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {listagem.doacoes.map((doacao) => (
+                    <tr key={doacao.id} data-confirmada={Boolean(doacao.confirmadoEm)}>
+                      <td>{quando(doacao.criadoEm, evento.fusoHorario)}</td>
+                      <td>{doacao.nome}</td>
+                      <td>{doacao.telefone ? <a href={`tel:+55${doacao.telefone}`}>{formatarTelefone(doacao.telefone)}</a> : "—"}</td>
+                      <td>{doacao.participanteId ? nomeParticipante.get(doacao.participanteId) ?? "—" : "—"}</td>
+                      <td>{reais(doacao.valor)}</td>
+                      <td>{doacao.pesoKg} kg</td>
+                      <td>
+                        {doacao.confirmadoEm
+                          ? <span className="admin-selo ok">Confirmada</span>
+                          : <span className="admin-selo pendente">Não confirmada</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {ultimaPagina > 1 && (
+              <nav className="admin-paginacao" aria-label="Páginas de doações">
+                {paginaAtual > 1 && <a className="admin-botao" href={enderecoPagina(paginaAtual - 1)}>← Anteriores</a>}
+                <span>Página {paginaAtual} de {ultimaPagina} · {listagem.total} {listagem.total === 1 ? "doação" : "doações"}</span>
+                {paginaAtual < ultimaPagina && <a className="admin-botao" href={enderecoPagina(paginaAtual + 1)}>Próximas →</a>}
+              </nav>
+            )}
+          </>
+        )}
       </section>
     </div>
   );

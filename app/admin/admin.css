@@ -119,3 +119,30 @@
   .admin-coluna-inteira { grid-column: auto; }
   .admin-barra-salvar { position: static; }
 }
+
+/* --- Registro de doações --- */
+.admin-busca { display: flex; flex-wrap: wrap; gap: 10px; }
+.admin-busca input { flex: 1 1 260px; min-width: 0; border: 1px solid rgba(44, 0, 32, .18); border-radius: 11px; padding: 10px 14px; font: inherit; font-size: 15px; color: #2c0020; background: #fff; }
+.admin-busca input:focus { outline: none; border-color: #9100e5; }
+
+.admin-vazio { color: rgba(44, 0, 32, .62); margin: 0; }
+
+/* A tabela é larga de propósito; em tela estreita ela rola em vez de espremer
+   o telefone, que é a coluna que existe para ser lida e copiada. */
+.admin-tabela-rolagem { overflow-x: auto; }
+.admin-tabela { width: 100%; border-collapse: collapse; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+.admin-tabela th, .admin-tabela td { text-align: left; padding: 11px 14px; border-bottom: 1px solid rgba(44, 0, 32, .1); white-space: nowrap; }
+.admin-tabela th { color: rgba(44, 0, 32, .62); font-size: 12px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.admin-tabela td { color: #2c0020; }
+.admin-tabela tbody tr:hover { background: #fdf7ff; }
+.admin-tabela td a { color: #9100e5; font-weight: 700; }
+/* Quem não confirmou o PIX fica sóbrio: está na lista para ser contado, não
+   para ser confundido com doação recebida. */
+.admin-tabela tr[data-confirmada="false"] td { color: rgba(44, 0, 32, .55); }
+
+.admin-selo { border-radius: 999px; display: inline-block; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; padding: 4px 10px; white-space: nowrap; }
+.admin-selo.ok { background: #e9f9e7; color: #176b26; }
+.admin-selo.pendente { background: #fff4dc; color: #8a5a00; }
+
+.admin-paginacao { align-items: center; display: flex; flex-wrap: wrap; gap: 12px; }
+.admin-paginacao span { color: rgba(44, 0, 32, .62); font-size: 14px; font-weight: 700; }

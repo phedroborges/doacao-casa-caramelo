@@ -568,6 +568,47 @@ export async function listarDoacoesEvento(eventoId: string): Promise<Doacao[]> {
   return ((data ?? []) as Linha[]).map(mapearDoacao);
 }
 
+/* A lista do painel é operacional: durante o evento a pergunta é "fulano
+   doou?", não "quantos quilos no total". Por isso busca por nome ou telefone e
+   páginas curtas, em vez de despejar tudo de uma vez. */
+export async function listarDoacoesPainel(
+  eventoId: string,
+  { busca = "", pagina = 1, porPagina = 50 }: { busca?: string; pagina?: number; porPagina?: number } = {},
+): Promise<{ doacoes: Doacao[]; total: number }> {
+  const supabase = await criarClienteSupabaseServidor();
+  const inicio = Math.max(0, (pagina - 1) * porPagina);
+  let consulta = supabase.from("donations").select("*", { count: "exact" }).eq("event_id", eventoId);
+
+  const termo = busca.trim();
+  if (termo) {
+    /* Vírgula, parêntese e asterisco são a sintaxe do filtro do PostgREST: sem
+       limpá-los, um nome com vírgula viraria outro filtro. */
+    const texto = termo.replace(/[,()*\\%]/g, " ").trim();
+    const digitos = termo.replace(/\D/g, "");
+    const filtros: string[] = [];
+    if (texto) filtros.push(`donor_name.ilike.%${texto}%`);
+    if (digitos.length >= 3) filtros.push(`donor_phone.ilike.%${digitos}%`);
+    if (filtros.length) consulta = consulta.or(filtros.join(","));
+  }
+
+  const { data, error, count } = await consulta
+    .order("created_at", { ascending: false })
+    .range(inicio, inicio + porPagina - 1);
+  exigirSemErro(error, "Não foi possível listar as doações");
+  return { doacoes: ((data ?? []) as Linha[]).map(mapearDoacao), total: count ?? 0 };
+}
+
+/* Duas contagens porque elas contam coisas diferentes: quem confirmou o PIX e
+   quem preencheu o formulário e desistiu no meio. A diferença é informação. */
+export async function resumoDoacoesEvento(eventoId: string): Promise<{ total: number; confirmadas: number }> {
+  const supabase = await criarClienteSupabaseServidor();
+  const base = () => supabase.from("donations").select("id", { head: true, count: "exact" }).eq("event_id", eventoId);
+  const [todas, confirmadas] = await Promise.all([base(), base().not("confirmed_at", "is", null)]);
+  exigirSemErro(todas.error, "Não foi possível contar as doações");
+  exigirSemErro(confirmadas.error, "Não foi possível contar as doações confirmadas");
+  return { total: todas.count ?? 0, confirmadas: confirmadas.count ?? 0 };
+}
+
 export async function contarDoacoesEvento(eventoId: string): Promise<number> {
   const supabase = await criarClienteSupabaseServidor();
   const { count, error } = await supabase.from("donations").select("id", { head: true, count: "exact" }).eq("event_id", eventoId).not("confirmed_at", "is", null);
